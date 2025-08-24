@@ -123,4 +123,11 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'sso' => [
+        'server_url' => env('SSO_SERVER_URL'),
+        'client_id' => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
+        'server_url_local' => env('SSO_SERVER_URL_LOCAL')
+    ],
+
 ];
