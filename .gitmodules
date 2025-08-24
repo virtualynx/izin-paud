@@ -1,0 +1,3 @@
+[submodule "app/Libraries/v-auth-client-php"]
+	path = app/Libraries/v-auth-client-php
+	url = https://github.com/virtualynx/v-auth-client-php.git

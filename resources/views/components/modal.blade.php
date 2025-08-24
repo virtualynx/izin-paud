@@ -67,70 +67,20 @@
             
             modal.show();
         },
-    };
-
-    function modalShow(
-        body = null, 
-        title = null,
-        primaryButtonConfig = {
-            label: 'Ok', 
-            callback: function(event){
-                // console.log('Primary-Button clicked');
-                modalHide();
+        hide: function(){
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modal_general'));
+            if (modal) {
+                modal.hide();
             }
-        },
-    ){
-        // console.log('modal.id', $('#modal_general').attr('id'));
-        const jqModal = $('#modal_general');
-
-        // Clean up any existing modal instance
-        const existingModal = bootstrap.Modal.getInstance(jqModal[0]);
-        if (existingModal) {
-            existingModal.hide();
+            
+            // Remove backdrop if it exists
+            $('.modal-backdrop').remove();
+            
+            // Reset body styles
+            $('body').css({
+                'overflow': '',
+                'padding-right': ''
+            }).removeClass('modal-open');
         }
-
-        // Remove previous click handlers to prevent accumulation
-        jqModal.find('.btn-primary').off('click');
-
-        if(title === null){
-            jqModal.find('.modal-title').html('');
-        }else{
-            jqModal.find('.modal-title').html(title);
-        }
-        
-        if(body !== null){
-            jqModal.find('.modal-body').html(body);
-        }
-
-        jqModal.find('.btn-primary').html(primaryButtonConfig.label);
-        jqModal.find('.btn-primary').on('click', primaryButtonConfig.callback);
-
-        // Initialize and show modal
-        const modal = new bootstrap.Modal(jqModal[0], {
-            backdrop: 'static' // This prevents closing when clicking outside
-        });
-        
-        // Handle hidden event to clean up
-        jqModal.off('hidden.bs.modal').on('hidden.bs.modal', function() {
-            modalHide();
-        });
-        
-        modal.show();
-    }
-
-    function modalHide(){
-        const modal = bootstrap.Modal.getInstance(document.getElementById('modal_general'));
-        if (modal) {
-            modal.hide();
-        }
-        
-        // Remove backdrop if it exists
-        $('.modal-backdrop').remove();
-        
-        // Reset body styles
-        $('body').css({
-            'overflow': '',
-            'padding-right': ''
-        }).removeClass('modal-open');
-    }
+    };
 </script>
