@@ -1,0 +1,57 @@
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #fff;
+}
+.navbar {
+    background: linear-gradient(90deg, #3494e6, #ec6ead);
+    position: sticky; /* Makes navbar stick to top */
+    top: 0; /* Position from top of viewport */
+    z-index: 1030; /* Ensures navbar stays above other content */
+}
+.navbar .nav-link, .navbar-brand {
+    color: #fff !important;
+    font-weight: 500;
+}
+.hero {
+    background: url('https://kecamatanciomas.bogorkab.go.id/images/banner.jpg') center/cover no-repeat;
+    color: #fff;
+    padding: 80px 20px;
+    text-align: center;
+    position: relative;
+}
+.hero::after {
+    content: "";
+    position: absolute;
+    top:0;left:0;right:0;bottom:0;
+    background: rgba(0,0,0,0.4);
+}
+.hero h1 {
+    position: relative;
+    z-index: 1;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+.content-section {
+    padding: 50px 15px;
+}
+.content-section h2 {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+.sidebar .card {
+    margin-bottom: 15px;
+}
+footer {
+    background: linear-gradient(90deg, #3494e6, #ec6ead);
+    color: #fff;
+    padding: 30px 20px;
+    margin-top: 50px;
+}
+footer a {
+    color: #fff;
+    text-decoration: none;
+}
+footer a:hover {
+    text-decoration: underline;
+}
