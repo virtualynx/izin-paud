@@ -14,13 +14,20 @@
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="#">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Berita</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Inovasi</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Potensi</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Agenda</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Tentang Kami</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Aplikasi SIMANTAN</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">&#8592; Kembali</a></li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Panduan
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Persyaratan</a></li>
+            <li><a class="dropdown-item" href="#">Alur Proses</a></li>
+            <li><a class="dropdown-item" href="#">FAQ</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item"><a class="btn btn-primary" href="{{ url('/permit/request') }}">AJUKAN IZIN</a></li>
       </ul>
     </div>
   </div>

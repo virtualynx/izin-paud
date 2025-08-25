@@ -24,7 +24,7 @@ class SsoController extends Controller
         $resp = $this->sso->SsoCallbackHandler();
 
         if($resp['action'] == 'login'){
-            $redirect = 'docs';
+            $redirect = '/';
 
             if(!empty($params['redirect'])){
                 $redirect = $params['redirect'];
