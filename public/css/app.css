@@ -14,7 +14,8 @@ body {
     font-weight: 500;
 }
 .hero {
-    background: url('https://kecamatanciomas.bogorkab.go.id/images/banner.jpg') center/cover no-repeat;
+    /* background: url('https://kecamatanciomas.bogorkab.go.id/assets/front/img/172671135829245410.jpg') center/cover no-repeat; */
+    background: url('../images/banner.jpg') center/cover no-repeat;
     color: #fff;
     padding: 80px 20px;
     text-align: center;

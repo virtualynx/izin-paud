@@ -28,9 +28,9 @@
 
     <!-- Hero -->
     <section class="hero">
-    <div class="container">
-        <h1>TENTANG MASA RANTING</h1>
-    </div>
+        <div class="container">
+            <h1>@yield('breadcrumbs')</h1>
+        </div>
     </section>
 
     <!-- Content -->

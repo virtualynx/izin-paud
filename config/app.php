@@ -130,4 +130,6 @@ return [
         'server_url_local' => env('SSO_SERVER_URL_LOCAL')
     ],
 
+    'kec_ciomas_url' => env('KEC_CIOMAS_URL'),
+
 ];
