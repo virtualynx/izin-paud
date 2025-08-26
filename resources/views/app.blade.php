@@ -42,6 +42,8 @@
 
     <!-- Footer -->
     @include('partials.footer')
+    
+    @include('components.scripts')
 
     @stack('scripts') <!-- For JS stacks -->
 </body>

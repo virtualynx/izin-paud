@@ -26,7 +26,7 @@
                 label: 'Ok', 
                 callback: function(event){
                     // console.log('Primary-Button clicked');
-                    modalHide();
+                    window.Modal.hide();
                 }
             },
         ){
@@ -62,7 +62,7 @@
             
             // Handle hidden event to clean up
             jqModal.off('hidden.bs.modal').on('hidden.bs.modal', function() {
-                modalHide();
+                window.Modal.hide();
             });
             
             modal.show();
