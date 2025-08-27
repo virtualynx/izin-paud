@@ -14,4 +14,14 @@ class TrxRequest extends Model
     protected $primaryKey = 'req_id';
 
     protected $guarded = [];
+
+    public function approvals()
+    {
+        return $this->hasMany(TrxRequestApproval::class, 'req_id', 'req_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(TrxRequestDocument::class, 'req_id', 'req_id');
+    }
 }

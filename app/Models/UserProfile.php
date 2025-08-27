@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Masters\Position;
 use Illuminate\Database\Eloquent\Model;
 
 class UserProfile extends Model
@@ -15,4 +16,16 @@ class UserProfile extends Model
     protected $guarded = [];
 
     protected $casts = [];
+    
+    public function positions()
+    {
+        return $this->belongsToMany(
+            Position::class, // Related model
+            'mx_employee_position',  // Pivot table name
+            'nip',   // Foreign key on pivot table
+            'position_id',   // Related key on pivot table
+            'nip',   // Local key
+            'position_id'    // Related key
+        );
+    }
 }
