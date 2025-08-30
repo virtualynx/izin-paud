@@ -15,6 +15,9 @@ class TrxRequest extends Model
 
     protected $guarded = [];
 
+    public const STATUS_PENDING = 'draft';
+    public const STATUS_SUBMITTED = 'submitted';
+
     public function approvals()
     {
         return $this->hasMany(TrxRequestApproval::class, 'req_id', 'req_id');
@@ -23,5 +26,10 @@ class TrxRequest extends Model
     public function documents()
     {
         return $this->hasMany(TrxRequestDocument::class, 'req_id', 'req_id');
+    }
+    
+    public function decree()
+    {
+        return $this->belongsTo(TrxPermitDecree::class, 'req_id', 'req_id');
     }
 }

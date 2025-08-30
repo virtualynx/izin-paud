@@ -35,6 +35,14 @@ return new class extends Migration
 
             $table->decimal('lat', 11, 8)->nullable();
             $table->decimal('lng', 11, 8)->nullable();
+
+            $table->string('ext_of_decree_num', 50)->nullable();
+            
+            // $table
+            //     ->foreign('req_id')
+            //     ->references('req_id')
+            //     ->on('trx_permit_decree')
+            //     ->onDelete('restrict');
         });
     }
 
