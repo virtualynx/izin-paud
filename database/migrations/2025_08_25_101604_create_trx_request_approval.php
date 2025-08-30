@@ -20,7 +20,9 @@ return new class extends Migration
 
             $table->uuid('req_id');
             $table->integer('level'); //lower means higher
-            $table->string('approval_status', 25); //approved, revise, rejected
+            $table->unsignedBigInteger('approver_user_id');
+            $table->string('approver_position_id', 25); //for documentation purpose
+            $table->string('approval_status', 25)->nullable(); //approved, revise, rejected
             
             $table
                 ->foreign('req_id')
