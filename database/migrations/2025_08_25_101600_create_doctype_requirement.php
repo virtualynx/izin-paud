@@ -31,6 +31,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'KTP_LEADER',
                 'name' => 'KTP Pembina',
                 'description' => 'KTP Pembina (Ketua Yayasan/ Ketua Lembaga /Direktur /Penanggung Jawab)',
@@ -40,24 +41,27 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'CERT_ESTABLISH',
                 'name' => 'Akta Yayasan',
                 'description' => 'Akta Yayasan dan Pengesahannya serta Akta Perubahannya (bila ada perubahan)',
                 'is_optional' => 0,
                 'is_multiple_file' => 0
             ],
-            // [
-            //     'created_at' => $now,
-            //     'updated_at' => $now,
-            //     'doctypereq_id' => 'POW_OF_ATTR',
-            //     'name' => 'Surat kuasa',
-            //     'description' => 'Surat kuasa bermeterai Rp. 10.000 dan stempel apabila pengurusan dikuasakan kepada orang lain, dengan melampirkan foto kopi KTP yang diberi kuasa',
-            //     'is_optional' => 1,
-            //     'is_multiple_file' => 0
-            // ],
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 1,
+                'doctypereq_id' => 'POW_OF_ATTR',
+                'name' => 'Surat kuasa',
+                'description' => 'Surat kuasa bermeterai Rp. 10.000 dan stempel apabila pengurusan dikuasakan kepada orang lain, dengan melampirkan foto kopi KTP yang diberi kuasa',
+                'is_optional' => 1,
+                'is_multiple_file' => 0
+            ],
+            [
+                'created_at' => $now,
+                'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'CONSENT_LOCALCOMM',
                 'name' => 'Persetujuan RT/RW',
                 'description' => 'Persetujuan / Dukungan Warga Setempat di ketahui RT/RW',
@@ -67,6 +71,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'RECOMM_LOCALSCHOOL',
                 'name' => 'Rekomendasi dari sekolah terdekat',
                 'description' => 'Persetujuan / Dukungan dari Satuan Pendidikan yang terdekat yang sejenis (min 2 satuan pendidikan)',
@@ -76,6 +81,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'LIST_ORGANIZATION',
                 'name' => 'Susunan Kepengurusan',
                 'description' => 'Susunan nama lengkap, jabatan, dan rincian tugas dari para pengurus',
@@ -85,6 +91,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'LIST_TEACHER',
                 'name' => 'Daftar Guru / Tenaga Pengajar',
                 'description' => 'Daftar Guru / Tenaga Pengajar',
@@ -94,6 +101,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'LIST_STUDENT',
                 'name' => 'Daftar Peserta Didik / Murid',
                 'description' => 'Daftar Peserta Didik / Murid',
@@ -103,6 +111,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'PHOTO_FACILITIES',
                 'name' => 'Foto Bangunan, SarPras, dan Lingkungan',
                 'description' => 'Foto sarana dan prasarana pendidikan yang diajukan, mulai dari tampak depan hingga ruang kelas, hingga lingkungan sekitarnya',
@@ -112,6 +121,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'SITE_PLAN',
                 'name' => 'Denah Lokasi',
                 'description' => 'Denah Lokasi dengan Luas lahan min 300m2 dengan ruang belajar 2 (dua) ruang belajar',
@@ -121,6 +131,7 @@ return new class extends Migration
             [
                 'created_at' => $now,
                 'updated_at' => $now,
+                'is_disabled' => 0,
                 'doctypereq_id' => 'RIPS',
                 'name' => 'Rencana Induk Pengembangan Sekolah (RIPS)',
                 'description' => 'Rencana Induk Pengembangan Sekolah (RIPS)',
