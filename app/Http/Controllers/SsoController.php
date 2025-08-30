@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserProfile;
 use VLynx\Sso\VAuthSsoClient;
 use Illuminate\Routing\Controller;
 
@@ -24,6 +25,17 @@ class SsoController extends Controller
         $resp = $this->sso->SsoCallbackHandler();
 
         if($resp['action'] == 'login'){
+            $sso_user = $resp['data'];
+            $user = UserProfile::where('user_id', $sso_user->user_id)->first();
+
+            if(empty($user)){
+                $new_user = new UserProfile([
+                    'user_id' => $sso_user->user_id,
+                    'name' => $sso_user->email
+                ]);
+                $new_user->save();
+            }
+
             $redirect = '/';
 
             if(!empty($params['redirect'])){

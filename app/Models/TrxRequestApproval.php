@@ -14,4 +14,9 @@ class TrxRequestApproval extends Model
     protected $primaryKey = 'req_app_id';
 
     protected $guarded = [];
+
+    public function employee()
+    {
+        return $this->belongsTo(UserProfile::class, 'user_id', 'user_id');
+    }
 }

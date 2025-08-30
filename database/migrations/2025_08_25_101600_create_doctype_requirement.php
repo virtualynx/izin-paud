@@ -46,15 +46,15 @@ return new class extends Migration
                 'is_optional' => 0,
                 'is_multiple_file' => 0
             ],
-            [
-                'created_at' => $now,
-                'updated_at' => $now,
-                'doctypereq_id' => 'POW_OF_ATTR',
-                'name' => 'Surat kuasa',
-                'description' => 'Surat kuasa bermeterai Rp. 10.000 dan stempel apabila pengurusan dikuasakan kepada orang lain, dengan melampirkan foto kopi KTP yang diberi kuasa',
-                'is_optional' => 0,
-                'is_multiple_file' => 0
-            ],
+            // [
+            //     'created_at' => $now,
+            //     'updated_at' => $now,
+            //     'doctypereq_id' => 'POW_OF_ATTR',
+            //     'name' => 'Surat kuasa',
+            //     'description' => 'Surat kuasa bermeterai Rp. 10.000 dan stempel apabila pengurusan dikuasakan kepada orang lain, dengan melampirkan foto kopi KTP yang diberi kuasa',
+            //     'is_optional' => 1,
+            //     'is_multiple_file' => 0
+            // ],
             [
                 'created_at' => $now,
                 'updated_at' => $now,
