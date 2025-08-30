@@ -12,4 +12,6 @@ Route::prefix('permit')->group(function () {
     Route::prefix('docrec')->group(function () {
         Route::get('/list', [PermitApi::class, 'docrec_list']);
     });
+
+    Route::post('/request_submit', [PermitApi::class, 'request_submit']);
 });

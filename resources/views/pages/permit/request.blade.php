@@ -240,8 +240,8 @@
                                     <div id="map" style="height: 100%;"></div>
                                 </div>
                                 
-                                <input type="hidden" id="latitude" name="lat">
-                                <input type="hidden" id="longitude" name="lng">
+                                <input type="hidden" name="lat">
+                                <input type="hidden" name="lng">
                             </div>
                         </div>
 
@@ -369,20 +369,17 @@
                                         <td>${a.description} ${mandatoryTag}</td>
                                         <td>
                                             <div class="multiple-file-upload" data-doctype="${a.doctypereq_id}">
-                                                <div class="file-preview-container mb-2"></div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary add-file-btn">
-                                                    <i class="bi bi-plus"></i> Tambah Foto
-                                                </button>
+                                                <div class="file-preview-container"></div>
                                                 <input 
                                                     type="file" 
-                                                    class="form-control form-control-sm d-none" 
+                                                    class="form-control form-control-sm" 
                                                     name="${a.doctypereq_id}[]" 
                                                     accept=".pdf,.jpg,.jpeg,.png" 
                                                     multiple
                                                     ${a.is_optional == 0 ? 'required' : ''}
                                                 >
+                                                <small class="text-muted d-block mt-1">Maks. 2MB per file</small>
                                             </div>
-                                            <small class="text-muted">Maks. 2MB per file</small>
                                         </td>
                                     </tr>
                                 `;
@@ -465,229 +462,6 @@
     </script>
 @endpush
 
-{{-- form submit event --}}
-@push('scripts')
-    <script>
-        $('#request_form').on('submit', function(e) {
-            e.preventDefault();
-            
-            // Validate form
-            if (!this.checkValidity()) {
-                e.stopPropagation();
-                this.classList.add('was-validated');
-                return;
-            }
-
-            // Validate that location is selected
-            if (!$('#latitude').val() || !$('#longitude').val()) {
-                alert('Harap pilih lokasi di peta.');
-
-                // Scroll to the map container
-                $('html, body').animate({
-                    scrollTop: $('#mapContainer').offset().top - 100 // Adjust offset as needed
-                }, 500);
-
-                // Highlight the map container
-                $('#mapContainer').css('border', '2px solid red');
-                
-                // Remove highlight after 3 seconds
-                setTimeout(function() {
-                    $('#mapContainer').css('border', '1px solid #ddd');
-                }, 3000);
-
-                return;
-            }
-            
-            // Create FormData object
-            let formData = new FormData(this);
-
-            console.log('formData', formData);
-            
-            // Append document files
-            $('input[type="file"]').each(function() {
-                if (this.files.length > 0) {
-                    for (let i = 0; i < this.files.length; i++) {
-                        formData.append(`${this.name}`, this.files[i]);
-                    }
-                }
-            });
-            
-            // Append location data
-            formData.append('lat', $('#latitude').val());
-            formData.append('lng', $('#longitude').val());
-            
-            // Show loading state
-            const submitBtn = $(this).find('button[type="submit"]');
-            const originalText = submitBtn.html();
-            submitBtn.prop('disabled', true).html(`
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Mengirim...
-            `);
-            
-            // Submit via AJAX
-            $.ajax({
-                url: '{{ url("api/permit/request_submit") }}',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        Modal.show(
-                            `<div class="text-center">
-                                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                                <h4 class="mt-3">Pengajuan Berhasil!</h4>
-                                <p>${response.message}</p>
-                                <p>Nomor Registrasi: <strong>${response.registration_number || 'N/A'}</strong></p>
-                            </div>`,
-                            'Sukses',
-                            {
-                                label: 'Tutup', 
-                                callback: function() {
-                                    // Redirect or reset form
-                                    window.location.href = response.redirect_url || '/';
-                                }
-                            }
-                        );
-                    } else {
-                        // Show error message
-                        Modal.show(
-                            `<div class="text-center">
-                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
-                                <h4 class="mt-3">Terjadi Kesalahan</h4>
-                                <p>${response.message}</p>
-                            </div>`,
-                            'Error'
-                        );
-                    }
-                },
-                error: Utils.ajaxErrorHandler,
-                complete: function() {
-                    // Restore button state
-                    submitBtn.prop('disabled', false).html(originalText);
-                }
-            });
-        });
-
-        // document.getElementById('request_form').addEventListener('submit', function(e) {
-        //     e.preventDefault();
-            
-        //     // Validate file sizes
-        //     let valid = true;
-        //     const inputs = this.querySelectorAll('input[type="file"]');
-            
-        //     inputs.forEach(input => {
-        //         if (input.files.length > 0) {
-        //             for (let i = 0; i < input.files.length; i++) {
-        //                 if (input.files[i].size > 2 * 1024 * 1024) { // 2MB limit
-        //                     alert(`File ${input.files[i].name} melebihi ukuran maksimum 2MB`);
-        //                     valid = false;
-        //                 }
-        //             }
-        //         }
-        //     });
-            
-        //     if (valid) {
-        //         // Show success modal
-        //         Modal.show(
-        //             '<p>Dokumen persyaratan PAUD berhasil diupload. Silakan tunggu proses verifikasi dari pihak terkait.</p>',
-        //             'Upload Berhasil',
-        //             {
-        //                 label: 'OK', 
-        //                 callback: function() {
-        //                     Modal.show();
-        //                     // In a real application, you would submit the form here
-        //                     // document.getElementById('paudDocumentForm').submit();
-        //                 }
-        //             }
-        //         );
-        //     }
-        // });
-    </script>
-@endpush
-
-{{-- Scripts for sarpras photos --}}
-@push('scripts')
-    <script>
-        // Handle multiple file uploads with preview
-        $(document).on('click', '.add-file-btn', function() {
-            const fileInput = $(this).siblings('input[type="file"]');
-            fileInput.click();
-        });
-
-        $(document).on('change', 'input[type="file"][name$="[]"]', function(e) {
-            const container = $(this).closest('.multiple-file-upload');
-            const previewContainer = container.find('.file-preview-container');
-            const files = this.files;
-            
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                
-                // Check file size
-                if (file.size > 2 * 1024 * 1024) {
-                    alert(`File ${file.name} melebihi ukuran maksimum 2MB`);
-                    continue;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    let previewHtml = '';
-                    
-                    if (file.type.startsWith('image/')) {
-                        previewHtml = `
-                            <div class="file-preview" data-filename="${file.name}">
-                                <img src="${e.target.result}" alt="${file.name}">
-                                <div class="file-name">${file.name}</div>
-                                <button type="button" class="remove-file">&times;</button>
-                            </div>
-                        `;
-                    } else {
-                        // For PDF and other non-image files
-                        previewHtml = `
-                            <div class="file-preview" data-filename="${file.name}">
-                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa;">
-                                    <i class="bi bi-file-earmark-text" style="font-size: 24px;"></i>
-                                </div>
-                                <div class="file-name">${file.name}</div>
-                                <button type="button" class="remove-file">&times;</button>
-                            </div>
-                        `;
-                    }
-                    
-                    previewContainer.append(previewHtml);
-                };
-                reader.readAsDataURL(file);
-            }
-            
-            // Clear the input to allow selecting the same files again
-            $(this).val('');
-        });
-
-        // Remove file preview
-        $(document).on('click', '.multiple-file-upload .remove-file', function() {
-            const preview = $(this).closest('.file-preview');
-            const fileName = preview.data('filename');
-            const container = preview.closest('.multiple-file-upload');
-            const fileInput = container.find('input[type="file"]');
-            
-            // Remove the file from the input's FileList (this requires creating a new DataTransfer)
-            const dt = new DataTransfer();
-            for (let i = 0; i < fileInput[0].files.length; i++) {
-                if (fileInput[0].files[i].name !== fileName) {
-                    dt.items.add(fileInput[0].files[i]);
-                }
-            }
-            fileInput[0].files = dt.files;
-            
-            preview.remove();
-        });
-    </script>    
-@endpush
-
 {{-- Script for single-file upload preview --}}
 @push('scripts')
     <script>
@@ -768,6 +542,100 @@
     </script>
 @endpush
 
+{{-- Multiple file upload --}}
+@push('scripts')
+    <script>
+        // Handle multiple file uploads with preview
+        $(document).on('change', '.multiple-file-upload input[type="file"]', function(e) {
+            const container = $(this).closest('.multiple-file-upload');
+            const previewContainer = container.find('.file-preview-container');
+            const files = this.files;
+            
+            if (!files || files.length === 0) return;
+            
+            // Clear existing previews
+            previewContainer.empty();
+            
+            // Process each file
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Check file size
+                if (file.size > 2 * 1024 * 1024) {
+                    alert(`File ${file.name} melebihi ukuran maksimum 2MB`);
+                    continue;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let previewHtml = '';
+                    
+                    if (file.type.startsWith('image/')) {
+                        previewHtml = `
+                            <div class="file-preview">
+                                <img src="${e.target.result}" alt="${file.name}">
+                                <div class="file-name">${file.name}</div>
+                                <button type="button" class="remove-file">&times;</button>
+                            </div>
+                        `;
+                    } else if (file.type === 'application/pdf') {
+                        previewHtml = `
+                            <div class="file-preview">
+                                <div class="pdf-preview">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </div>
+                                <div class="file-name">${file.name}</div>
+                                <button type="button" class="remove-file">&times;</button>
+                            </div>
+                        `;
+                    } else {
+                        previewHtml = `
+                            <div class="file-preview">
+                                <div class="pdf-preview">
+                                    <i class="bi bi-file-earmark"></i>
+                                </div>
+                                <div class="file-name">${file.name}</div>
+                                <button type="button" class="remove-file">&times;</button>
+                            </div>
+                        `;
+                    }
+                    
+                    previewContainer.append(previewHtml);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Remove file preview for multiple files
+        $(document).on('click', '.multiple-file-upload .remove-file', function() {
+            const filePreview = $(this).closest('.file-preview');
+            const container = filePreview.closest('.multiple-file-upload');
+            const fileInput = container.find('input[type="file"]');
+            
+            // Get the index of the file to remove
+            const index = filePreview.index();
+            
+            // Create a new FileList without the removed file
+            const dt = new DataTransfer();
+            const files = fileInput[0].files;
+            
+            for (let i = 0; i < files.length; i++) {
+                if (i !== index) {
+                    dt.items.add(files[i]);
+                }
+            }
+            
+            fileInput[0].files = dt.files;
+            
+            // Remove the preview
+            filePreview.remove();
+            
+            // Trigger change event to update the input
+            fileInput.trigger('change');
+        });
+    </script>
+@endpush
+
 {{-- OSM map --}}
 @push('scripts')
     <!-- Leaflet JS -->
@@ -816,33 +684,12 @@
                 const {lat, lng} = event.latlng;
 
                 if(!marker){
-                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-                    
-                    // Update coordinates when marker is dragged
-                    marker.on('dragend', async function(event) {
-                        const position = marker.getLatLng();
-                        $('#latitude').val(position.lat);
-                        $('#longitude').val(position.lng);
-
-                        // Show loading state in address field
-                        // $('textarea[name="address"]').val('Mendapatkan alamat...');
-                        
-                        // const address = await getAddressFromCoordinates(position.lat, position.lng);
-                        // if (address) {
-                        //     $('textarea[name="address"]').val(address);
-                        // }
-                        
-                        // Get address when marker is dragged
-                        if($('textarea[name="address"]').data('manual-input') == false){
-                            console.log('asdf test');
-                            const address = await getAddressFromCoordinates(position.lat, position.lng);
-                        }
-                    });
+                    initMarker(lat, lng);
                 }
 
                 marker.setLatLng([lat, lng]);
-                $('#latitude').val(lat);
-                $('#longitude').val(lng);
+                $('[name="lat"]').val(lat);
+                $('[name="lng"]').val(lng);
 
                 // Show loading state in address field
                 // $('textarea[name="address"]').val('Mendapatkan alamat...');
@@ -856,12 +703,7 @@
                 // }
 
                 // Get address when marker is dragged
-                let test = $('textarea[name="address"]').data('manual-input');
-                console.log('test', test);
-                if($('textarea[name="address"]').data('manual-input') == false){
-                    console.log('asdf test');
-                    const address = await getAddressFromCoordinates(lat, lng);
-                }
+                const address = await getAddressFromCoordinates(lat, lng);
             });
             
             // Add locate control
@@ -873,8 +715,27 @@
             // }).addTo(map);
         }
 
+        function initMarker(lat, lng){
+            marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                    
+            // Update coordinates when marker is dragged
+            marker.on('dragend', async function(event) {
+                const position = marker.getLatLng();
+                $('[name="lat"]').val(position.lat);
+                $('[name="lng"]').val(position.lng);
+
+                // Show loading state in address field
+                $('textarea[name="address"]').val('Mendapatkan alamat...');
+                
+                // Get address when marker is dragged
+                const address = await getAddressFromCoordinates(position.lat, position.lng);
+            });
+        }
+
         // Function to get address from coordinates using Nominatim (OSM)
         async function getAddressFromCoordinates(lat, lng) {
+            if($('textarea[name="address"]').data('manual-input') == true)return;
+
             try {
                 // Show loading state in address field
                 $('textarea[name="address"]').val('Mendapatkan alamat...');
@@ -897,5 +758,102 @@
                 return null;
             }
         }
+    </script>
+@endpush
+
+{{-- form submit event --}}
+@push('scripts')
+    <script>
+        $('#request_form').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                this.classList.add('was-validated');
+                return;
+            }
+
+            // Validate that location is selected
+            if (!$('[name="lat"]').val() || !$('[name="lng"]').val()) {
+                alert('Harap pilih lokasi di peta.');
+
+                // Scroll to the map container
+                $('html, body').animate({
+                    scrollTop: $('#mapContainer').offset().top - 100 // Adjust offset as needed
+                }, 500);
+
+                // Highlight the map container
+                $('#mapContainer').css('border', '2px solid red');
+                
+                // Remove highlight after 3 seconds
+                setTimeout(function() {
+                    $('#mapContainer').css('border', '1px solid #ddd');
+                }, 3000);
+
+                return;
+            }
+            
+            // Create FormData object
+            let formData = new FormData(this);
+
+            $('[type="file"].file-input-hidden').css('display', 'block');
+            
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Mengirim...
+            `);
+            
+            // Submit via AJAX
+            $.ajax({
+                url: '{{ url("api/permit/request_submit") }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        Modal.show(
+                            `<div class="text-center">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Pengajuan Berhasil!</h4>
+                                <p>${response.message}</p>
+                                <p>Nomor Registrasi: <strong>${response.registration_number || 'N/A'}</strong></p>
+                            </div>`,
+                            'Sukses',
+                            {
+                                label: 'Tutup', 
+                                callback: function() {
+                                    // Redirect or reset form
+                                    window.location.href = response.redirect_url || '/';
+                                }
+                            }
+                        );
+                    } else {
+                        // Show error message
+                        Modal.show(
+                            `<div class="text-center">
+                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Terjadi Kesalahan</h4>
+                                <p>${response.message}</p>
+                            </div>`,
+                            'Error'
+                        );
+                    }
+                },
+                error: Utils.ajaxErrorHandler,
+                complete: function() {
+                    // Restore button state
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
     </script>
 @endpush
