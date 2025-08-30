@@ -21,7 +21,9 @@ return new class extends Migration
             $table->uuid('req_id');
             $table->string('doctypereq_id', 25);
             $table->text('file_path')->nullable();
-            $table->boolean('is_waived')->default('0');
+            $table->enum('verify_status', ['verified', 'revision'])->nullable();
+            $table->unsignedBigInteger('verified_by')->nullable();
+            $table->boolean('is_waived')->default('0'); //will be implemented later
 
             $table
                 ->foreign('req_id')

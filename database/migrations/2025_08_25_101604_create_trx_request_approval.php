@@ -22,7 +22,7 @@ return new class extends Migration
             $table->integer('level'); //lower means higher
             $table->unsignedBigInteger('approver_user_id');
             $table->string('approver_position_id', 25); //for documentation purpose
-            $table->string('approval_status', 25)->nullable(); //approved, revise, rejected
+            $table->enum('approval_status', ['approved', 'revision', 'rejected'])->nullable();
             
             $table
                 ->foreign('req_id')
