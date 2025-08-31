@@ -5,6 +5,7 @@ namespace App\Http\Api;
 use App\Dto\ApiResponse;
 use App\Models\Masters\DoctypeRequirement;
 use App\Models\TrxRequest;
+use App\Services\PermitService;
 use App\Services\PositionService;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -66,19 +67,17 @@ class PermitApi extends Controller
         $is_fails = $validator->fails();
         $errors = $validator->errors();
 
-        // if ($validator->fails()) {
-        //     // return response()->json([
-        //     //     'success' => false,
-        //     //     'message' => 'Validasi gagal',
-        //     //     'errors' => $validator->errors()
-        //     // ], 422);
+        if ($validator->fails()) {
+            // return response()->json([
+            //     'success' => false,
+            //     'message' => 'Validasi gagal',
+            //     'errors' => $validator->errors()
+            // ], 422);
 
-        //     return response()->json(
-        //         new ApiResponse($validator->errors(), 422, 'validation fail')
-        //     );
-        // }
-
-        
+            return response()->json(
+                new ApiResponse($validator->errors(), 422, 'validation fail')
+            );
+        }
 
         $response = new ApiResponse();
         DB::beginTransaction();
@@ -142,5 +141,55 @@ class PermitApi extends Controller
         }
 
         return response()->json(new ApiResponse($response));
+    }
+
+    public function list(){
+        $params = request()->all();
+
+        $query = TrxRequest::query()
+            ->where('is_disabled', 0);
+
+        if(!empty($params['own_request']) && filter_var($params['own_request'], FILTER_VALIDATE_BOOLEAN)){
+            $userinfo = userinfo();
+            $a = 1;
+        }
+
+        $order_by = 'asc';
+        if(!empty($params['order'])){
+            $order_by = $params['order'];
+        }
+
+        $query = $query->orderBy('created_at', $order_by);
+
+        $results = $query->get();
+
+        return response()->json(new ApiResponse($results));
+    }
+    
+    public function dt_to_verify_list(PermitService $permitService){
+        $params = request()->all();
+
+        $rs = $permitService->listUnverifiedRequest();
+
+        $totalRecords = $filteredRecords = count($rs);
+
+        $data = [];
+        foreach ($rs as $row) {
+            $data[] = [
+                'req_id' => $row->req_id,
+                'reg_num' => $row->reg_num,
+                'name' => $row->name,
+                'request_date' => $row->created_at->format('d-m-Y H:i'),
+                'actions' => null, // Will be filled by JS
+                'is_own' => 0
+            ];
+        }
+
+        return response()->json([
+            'draw' => $params['draw'],
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ]);
     }
 }

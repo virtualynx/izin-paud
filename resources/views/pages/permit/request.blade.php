@@ -12,6 +12,9 @@
     {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.0/dist/L.Control.Locate.min.css" /> --}}
 @endpush
 
+{{-- Filepond for multiple file upload --}}
+@include('imports.filepond')
+
 @section('content')
     <style>
         .mandatory-tag {
@@ -187,9 +190,6 @@
         </div>
     </form>
 @endsection
-
-{{-- Filepond for multiple file upload --}}
-@include('imports.filepond')
 
 {{-- on page load --}}
 @push('scripts')

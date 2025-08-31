@@ -20,6 +20,22 @@
                 console.error('AJAX Error:', xhr.status, error);
                 console.log(errorMessage);
             }
+        },
+        saveFormData: function(formId){
+            const inputs = $('#'+formId).find('input');
+
+            let datas = {};
+            Object.entries(inputs).forEach(([key, value]) => {
+                let el = $(value);
+                if(el.prop('name') && el.prop('name').trim() !== '' && el.prop('type') != 'file'){
+                    console.log(`Name: ${el.prop('name')}, Value:`, el.val());
+                }
+            });
+
+            // console.log('inputs', inputs);
+        },
+        loadFormData: function(formId){
+
         }
     };
 </script>

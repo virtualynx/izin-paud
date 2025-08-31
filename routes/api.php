@@ -13,5 +13,7 @@ Route::prefix('permit')->group(function () {
         Route::get('/list', [PermitApi::class, 'docrec_list']);
     });
 
+    Route::get('/list', [PermitApi::class, 'list']);
+    Route::post('/dt_to_verify_list', [PermitApi::class, 'dt_to_verify_list']);
     Route::post('/request_submit', [PermitApi::class, 'request_submit']);
 });

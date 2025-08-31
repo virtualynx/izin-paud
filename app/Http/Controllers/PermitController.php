@@ -15,7 +15,11 @@ class PermitController extends Controller
         // return redirect('docs');
     }
 
-    public function request_page(){
+    public function page_request(){
         return view('pages.permit.request');
+    }
+
+    public function page_verification(){
+        return view('pages.permit.verification');
     }
 }
