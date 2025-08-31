@@ -37,161 +37,6 @@
         }
     </style>
 
-    {{-- Styles for Sarpras Photos --}}
-    <style>
-        .multiple-file-upload {
-            position: relative;
-        }
-
-        .file-preview-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .file-preview {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .file-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .file-preview .file-name {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            font-size: 10px;
-            padding: 2px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .file-preview .remove-file {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background: rgba(255,255,255,0.8);
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            line-height: 1;
-            cursor: pointer;
-        }
-    </style>
-
-    {{-- Single file upload styles --}}
-    <style>
-        /* Single file upload styles */
-        .single-file-upload {
-            position: relative;
-        }
-
-        .single-file-upload .file-preview-container {
-            margin-bottom: 10px;
-        }
-
-        .single-file-upload .file-preview {
-            width: 100%;
-            height: 120px;
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .single-file-upload .file-preview.empty {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8f9fa;
-        }
-
-        .single-file-upload .file-preview.empty .placeholder {
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .single-file-upload .file-preview.empty .placeholder i {
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .single-file-upload .file-preview.filled {
-            border: 1px solid #ced4da;
-            padding: 5px;
-        }
-
-        .single-file-upload .file-preview img,
-        .single-file-upload .file-preview .pdf-preview {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .single-file-upload .file-preview .pdf-preview {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-        }
-
-        .single-file-upload .file-preview .pdf-preview i {
-            font-size: 2.5rem;
-            color: #dc3545;
-            margin-bottom: 8px;
-        }
-
-        .single-file-upload .file-preview .pdf-preview .file-name {
-            font-size: 0.8rem;
-            text-align: center;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 0 5px;
-        }
-
-        .single-file-upload .file-preview .remove-file {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(255,255,255,0.9);
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 14px;
-            line-height: 1;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .single-file-upload .file-input {
-            margin-top: 8px;
-        }
-    </style>
-
     <form id="request_form" enctype="multipart/form-data">
         @csrf
 
@@ -343,6 +188,9 @@
     </form>
 @endsection
 
+{{-- Filepond for multiple file upload --}}
+@include('imports.filepond')
+
 {{-- on page load --}}
 @push('scripts')
     <script>
@@ -368,18 +216,17 @@
                                         <td>${no}</td>
                                         <td>${a.description} ${mandatoryTag}</td>
                                         <td>
-                                            <div class="multiple-file-upload" data-doctype="${a.doctypereq_id}">
-                                                <div class="file-preview-container"></div>
-                                                <input 
-                                                    type="file" 
-                                                    class="form-control form-control-sm" 
-                                                    name="${a.doctypereq_id}[]" 
-                                                    accept=".pdf,.jpg,.jpeg,.png" 
-                                                    multiple
-                                                    ${a.is_optional == 0 ? 'required' : ''}
-                                                >
-                                                <small class="text-muted d-block mt-1">Maks. 2MB per file</small>
-                                            </div>
+                                            <input 
+                                                type="file" 
+                                                class="filepond form-control form-control-sm"
+                                                name="${a.doctypereq_id}[]" 
+                                                accept="image/png, image/jpeg, image/jpg"
+                                                multiple 
+                                                data-allow-reorder="true"
+                                                data-max-file-size="2MB"
+                                                data-max-files="10"
+                                                ${a.is_optional == 0 ? 'required' : ''}
+                                            >
                                         </td>
                                     </tr>
                                 `;
@@ -414,6 +261,15 @@
 
                             tbody.append(toBeAppended);
                             no++;
+                        });
+
+                        $('.filepond').filepond({
+                            labelIdle: `<span class="filepond--label-action">Pilih Foto</span>`,
+                            // Add these critical options:
+                            // allowMultiple: true,
+                            allowProcess: false, // Disable automatic uploading
+                            instantUpload: false, // Disable instant upload
+                            storeAsFile: true, // Ensure files are stored as File objects
                         });
                     }else{
                         Modal.show(
@@ -460,6 +316,107 @@
             // }, 5 * 1000);
         });
     </script>
+@endpush
+
+
+{{-- Single file upload styles --}}
+@push('head-stacks')
+    <style>
+        /* Single file upload styles */
+        .single-file-upload {
+            position: relative;
+        }
+
+        .single-file-upload .file-preview-container {
+            margin-bottom: 10px;
+        }
+
+        .single-file-upload .file-preview {
+            width: 100%;
+            height: 120px;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .single-file-upload .file-preview.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+
+        .single-file-upload .file-preview.empty .placeholder {
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .single-file-upload .file-preview.empty .placeholder i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .single-file-upload .file-preview.filled {
+            border: 1px solid #ced4da;
+            padding: 5px;
+        }
+
+        .single-file-upload .file-preview img,
+        .single-file-upload .file-preview .pdf-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .single-file-upload .file-preview .pdf-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        .single-file-upload .file-preview .pdf-preview i {
+            font-size: 2.5rem;
+            color: #dc3545;
+            margin-bottom: 8px;
+        }
+
+        .single-file-upload .file-preview .pdf-preview .file-name {
+            font-size: 0.8rem;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 5px;
+        }
+
+        .single-file-upload .file-preview .remove-file {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .single-file-upload .file-input {
+            margin-top: 8px;
+        }
+    </style>
 @endpush
 
 {{-- Script for single-file upload preview --}}
@@ -538,100 +495,6 @@
                     </div>
                 </div>
             `);
-        });
-    </script>
-@endpush
-
-{{-- Multiple file upload --}}
-@push('scripts')
-    <script>
-        // Handle multiple file uploads with preview
-        $(document).on('change', '.multiple-file-upload input[type="file"]', function(e) {
-            const container = $(this).closest('.multiple-file-upload');
-            const previewContainer = container.find('.file-preview-container');
-            const files = this.files;
-            
-            if (!files || files.length === 0) return;
-            
-            // Clear existing previews
-            previewContainer.empty();
-            
-            // Process each file
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                
-                // Check file size
-                if (file.size > 2 * 1024 * 1024) {
-                    alert(`File ${file.name} melebihi ukuran maksimum 2MB`);
-                    continue;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    let previewHtml = '';
-                    
-                    if (file.type.startsWith('image/')) {
-                        previewHtml = `
-                            <div class="file-preview">
-                                <img src="${e.target.result}" alt="${file.name}">
-                                <div class="file-name">${file.name}</div>
-                                <button type="button" class="remove-file">&times;</button>
-                            </div>
-                        `;
-                    } else if (file.type === 'application/pdf') {
-                        previewHtml = `
-                            <div class="file-preview">
-                                <div class="pdf-preview">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                </div>
-                                <div class="file-name">${file.name}</div>
-                                <button type="button" class="remove-file">&times;</button>
-                            </div>
-                        `;
-                    } else {
-                        previewHtml = `
-                            <div class="file-preview">
-                                <div class="pdf-preview">
-                                    <i class="bi bi-file-earmark"></i>
-                                </div>
-                                <div class="file-name">${file.name}</div>
-                                <button type="button" class="remove-file">&times;</button>
-                            </div>
-                        `;
-                    }
-                    
-                    previewContainer.append(previewHtml);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Remove file preview for multiple files
-        $(document).on('click', '.multiple-file-upload .remove-file', function() {
-            const filePreview = $(this).closest('.file-preview');
-            const container = filePreview.closest('.multiple-file-upload');
-            const fileInput = container.find('input[type="file"]');
-            
-            // Get the index of the file to remove
-            const index = filePreview.index();
-            
-            // Create a new FileList without the removed file
-            const dt = new DataTransfer();
-            const files = fileInput[0].files;
-            
-            for (let i = 0; i < files.length; i++) {
-                if (i !== index) {
-                    dt.items.add(files[i]);
-                }
-            }
-            
-            fileInput[0].files = dt.files;
-            
-            // Remove the preview
-            filePreview.remove();
-            
-            // Trigger change event to update the input
-            fileInput.trigger('change');
         });
     </script>
 @endpush
@@ -796,8 +659,6 @@
             
             // Create FormData object
             let formData = new FormData(this);
-
-            $('[type="file"].file-input-hidden').css('display', 'block');
             
             // Show loading state
             const submitBtn = $(this).find('button[type="submit"]');

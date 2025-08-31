@@ -46,14 +46,19 @@ class PermitApi extends Controller
         $doctypes = DoctypeRequirement::where('is_disabled', 0)->get();
         $maxSizeInBytes = 2048;
         foreach($doctypes as $row){
-            if($row->is_optional == 1 && empty($params[$row->doctypereq_id]))continue;
-
-            $rule = "file|mimes:pdf,jpg,jpeg,png|max:$maxSizeInBytes";
-            if($row->is_optional == 0){
-                $rule .= "|required";
+            if($row->is_optional == 1 && empty($params[$row->doctypereq_id])){
+                continue;
             }
 
-            $validator_rules[$row->doctypereq_id] = $rule;
+            $basicRules = "file|mimes:pdf,jpg,jpeg,png|max:$maxSizeInBytes";
+            if($row->is_multiple_file ==1){
+                // 'doc_ktp' => 'required|array|min:1', // Multiple files, at least 1 required
+                // 'doc_ktp.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                $validator_rules[$row->doctypereq_id] = 'array'.($row->is_optional==0? '|required|min:1': '');
+                $validator_rules[$row->doctypereq_id.'.*'] = $basicRules.($row->is_optional==0? '|required': '');
+            }else{
+                $validator_rules[$row->doctypereq_id] = $basicRules.($row->is_optional==0? '|required': '');
+            }
         }
 
         // Validate the request
@@ -72,6 +77,8 @@ class PermitApi extends Controller
         //         new ApiResponse($validator->errors(), 422, 'validation fail')
         //     );
         // }
+
+        
 
         $response = new ApiResponse();
         DB::beginTransaction();
