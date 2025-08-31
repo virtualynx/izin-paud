@@ -1,3 +1,16 @@
+<style>
+  .navbar-nav .nav-item {
+    margin-right: 10px;
+  }
+  
+  /* For mobile view */
+  @media (max-width: 991.98px) {
+    .navbar-nav .nav-item {
+      margin-right: 0;
+      margin-bottom: 8px;
+    }
+  }
+</style>
 
 <nav class="navbar navbar-expand-lg">
   <div class="container">
@@ -16,6 +29,8 @@
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link" href="{{ config('app.kec_ciomas_url') }}">&#8592; Kembali</a></li>
 
+        <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Beranda</a></li>
+
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Panduan
@@ -27,7 +42,26 @@
           </ul>
         </li>
 
-        <li class="nav-item"><a class="btn btn-primary" href="{{ url('/permit/request') }}">AJUKAN IZIN</a></li>
+        @if(is_loggedin())
+          @if(is_verificator() || is_approver())
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Petugas
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url('/permit/verification') }}">Verifikasi</a></li>
+                @if(is_approver())
+                  <li><a class="dropdown-item" href="{{ url('/permit/approval') }}">Approval</a></li>
+                @endif
+              </ul>
+            </li>
+          @endif
+
+          <li class="nav-item"><a class="btn btn-primary" href="{{ url('/permit/request') }}">AJUKAN IZIN</a></li>
+          <li class="nav-item"><a class="btn btn-danger" href="{{ url('/sso/logout') }}">Logout</a></li>
+        @else
+          <li class="nav-item"><a class="btn btn-primary" href="{{ url('/sso/login') }}">Login</a></li>
+        @endif
       </ul>
     </div>
   </div>

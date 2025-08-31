@@ -22,7 +22,8 @@
     },
     "autoload": {
         "files": [
-            "app/Libraries/v-auth-client-php/helpers.php"
+            "app/Libraries/v-auth-client-php/helpers.php",
+            "app/Libraries/helpers/role_helper.php"
         ],
         "psr-4": {
             "App\\": "app/",
