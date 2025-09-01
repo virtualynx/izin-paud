@@ -2,10 +2,13 @@
 
 namespace App\Models\Masters;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class DoctypeRequirement extends Model
 {
+    use Auditable;
+
     protected $table = 'doctype_requirement';
 
     protected $primaryKey = 'doctypereq_id';

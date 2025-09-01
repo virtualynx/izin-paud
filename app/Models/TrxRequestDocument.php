@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Masters\DoctypeRequirement;
+use App\Traits\Auditable;
 use App\Traits\HasUuidPrimaryKey;
 use Illuminate\Database\Eloquent\Model;
 
 class TrxRequestDocument extends Model
 {
-    use HasUuidPrimaryKey;
+    use HasUuidPrimaryKey, Auditable;
     
     protected $table = 'trx_request_document';
 

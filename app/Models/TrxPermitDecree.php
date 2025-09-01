@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\HasUuidPrimaryKey;
 use Illuminate\Database\Eloquent\Model;
 
 class TrxPermitDecree extends Model
 {
-    use HasUuidPrimaryKey;
+    use HasUuidPrimaryKey, Auditable;
     
     protected $table = 'trx_permit_decree';
 

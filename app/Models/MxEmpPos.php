@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Models\Masters\DoctypeRequirement;
 use App\Models\Masters\Position;
+use App\Traits\Auditable;
 use App\Traits\HasUuidPrimaryKey;
 use Illuminate\Database\Eloquent\Model;
 
 class MxEmpPos extends Model
 {
-    use HasUuidPrimaryKey;
+    use HasUuidPrimaryKey, Auditable;
     
     protected $table = 'mx_employee_position';
 

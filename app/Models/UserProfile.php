@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Models\Masters\Position;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class UserProfile extends Model
 {
+    use Auditable;
+
     protected $table = 'user_profile';
 
     protected $primaryKey = 'user_id';
