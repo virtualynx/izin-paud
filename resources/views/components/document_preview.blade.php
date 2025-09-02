@@ -71,10 +71,10 @@
             <div class="modal-body" id="pdf-modal-body" style="overflow: auto;">
                 <!-- Loading Spinner -->
                 <div id="pdf-loading-spinner" class="text-center py-5">
-                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                    {{-- <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
                         <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Loading PDF...</p>
+                    </div> --}}
+                    <p class="mt-2">Loading...</p>
                 </div>
 
                 <!-- Parent Doc Link -->
@@ -137,9 +137,12 @@
             // Handle Preview Button Clicks
             $('#table_documents').on('click', '.preview-pdf', function() {
                 const fileUrl = $(this).data('url');
+                const mime = $(this).data('mime');
                 const fileExt = fileUrl.split('.').pop().toLowerCase();
+
+                pdfModal.show();
                 
-                if (imageExtensions.includes(fileExt)) {
+                if (imageExtensions.includes(fileExt) || mime.startsWith('image')) {
                     showImage(fileUrl);
                 } else {
                     loadAndRenderPdf(fileUrl);
@@ -155,17 +158,18 @@
                     $('#parent_doc_link_div').find('#parent_doc_link').attr('href', '');
                     $('#parent_doc_link_div').find('#parent_doc_link_text').html('');
                 }
-
-                pdfModal.show();
             });
 
             // Show Image Function
+            imageElement.addEventListener('load', function() {
+                document.getElementById('image-viewer-container').style.display = 'block';
+                document.getElementById('pdf-loading-spinner').style.display = 'none';
+            });
             function showImage(url) {
                 // Hide PDF viewer, show image viewer
                 $('#pdf-viewer-container').removeClass('d-flex justify-content-center');
                 document.getElementById('pdf-viewer-container').style.display = 'none';
-                document.getElementById('image-viewer-container').style.display = 'block';
-                document.getElementById('pdf-loading-spinner').style.display = 'none';
+                document.getElementById('pdf-loading-spinner').style.display = 'block';
                 
                 // Hide PDF navigation controls
                 document.getElementById('pdf-navigation').style.display = 'none';
@@ -187,7 +191,7 @@
                 document.getElementById('image-viewer-container').style.display = 'none';
                 $('#pdf-viewer-container').addClass('d-flex justify-content-center');
                 document.getElementById('pdf-viewer-container').style.display = 'block';
-                document.getElementById('pdf-navigation').style.display = 'flex';
+                document.getElementById('pdf-navigation').style.display = 'none';
                 
                 // Reset canvas to clear any previous content
                 canvas.width = 0;
@@ -219,6 +223,7 @@
                         // Hide spinner, show viewer when ready to render
                         document.getElementById('pdf-loading-spinner').style.display = 'none';
                         document.getElementById('pdf-viewer-container').style.display = 'block';
+                        document.getElementById('pdf-navigation').style.display = 'flex';
 
                         // Initialize resize observer if not already done
                         if (!resizeObserver) {
