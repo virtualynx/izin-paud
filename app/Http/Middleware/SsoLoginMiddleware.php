@@ -22,7 +22,7 @@ class SsoLoginMiddleware
         $server_url_local = config('app.sso.server_url_local');
 
         $ssoClient = new VAuthSsoClient($server_url, $client_id, $client_secret, $server_url_local);
-        $token = $ssoClient->AuthCheck();
+        $isValid = $ssoClient->AuthCheck();
 
         return $next($request);
     }

@@ -18,5 +18,10 @@ Route::middleware(['sso_login'])->group(function () {
         Route::get('/request', [PermitController::class, 'page_request']);
         Route::get('/verification', [PermitController::class, 'page_verification']);
         Route::get('/approval', [PermitController::class, 'page_approval']);
+        
+        Route::get('/verify/{req_id}', [PermitController::class, 'page_verify']);
+        Route::prefix('document')->group(function () {
+            Route::get('/preview/{req_doc_id}', [PermitController::class, 'document_preview']);
+        });
     });
 });

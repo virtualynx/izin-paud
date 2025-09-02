@@ -26,7 +26,7 @@ class TrxRequest extends Model
 
     public function documents()
     {
-        return $this->hasMany(TrxRequestDocument::class, 'req_id', 'req_id');
+        return $this->hasMany(TrxRequestDocument::class, 'req_id', 'req_id')->orderBy('doctypereq_id', 'asc');;
     }
     
     public function decree()

@@ -16,6 +16,9 @@ class TrxRequestDocument extends Model
     protected $primaryKey = 'req_doc_id';
 
     protected $guarded = [];
+    
+    public const STATUS_VERIFIED = 'verified';
+    public const STATUS_REVISION = 'revision';
 
     public function doctype()
     {

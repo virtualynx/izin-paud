@@ -173,6 +173,8 @@ class PermitApi extends Controller
 
         $totalRecords = $filteredRecords = count($rs);
 
+        $user = userinfo();
+
         $data = [];
         foreach ($rs as $row) {
             $data[] = [
@@ -181,7 +183,7 @@ class PermitApi extends Controller
                 'name' => $row->name,
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
                 'actions' => null, // Will be filled by JS
-                'is_own' => 0
+                'is_own' => $row->created_by == $user->user_id
             ];
         }
 
