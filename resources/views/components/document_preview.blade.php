@@ -65,16 +65,20 @@
     <div class="modal-dialog w-auto">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="pdfModalTitle">PDF Preview</h5>
+                <h5 class="modal-title">PDF Preview</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="pdf-modal-body" style="overflow: auto;">
                 <!-- Loading Spinner -->
                 <div id="pdf-loading-spinner" class="text-center py-5">
-                    {{-- <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div> --}}
                     <p class="mt-2">Loading...</p>
+                </div>
+
+                <div id="pdf-loading-error" class="text-center py-5">
+                    <div class="alert alert-danger">
+                        Gagal ketika membaca file.
+                        {{-- <button class="btn btn-sm btn-link" onclick="window.location.reload()">Muat Ulang</button> --}}
+                    </div>
                 </div>
 
                 <!-- Parent Doc Link -->
@@ -138,7 +142,12 @@
             $('#table_documents').on('click', '.preview-pdf', function() {
                 const fileUrl = $(this).data('url');
                 const mime = $(this).data('mime');
+                const filename = $(this).data('filename');
                 const fileExt = fileUrl.split('.').pop().toLowerCase();
+                
+                document.getElementById('pdf-loading-error').style.display = 'none';
+
+                $('#pdfModal').find('.modal-title').html(`View file: ${filename}`);
 
                 pdfModal.show();
                 
@@ -176,7 +185,6 @@
                 
                 // Set image source
                 imageElement.src = url;
-                document.getElementById('pdfModalTitle').textContent = `Previewing: ${url.split('/').pop()}`;
                 
                 // Set up download button for image
                 const downloadBtn = document.getElementById('pdf-download-btn');
@@ -217,7 +225,6 @@
                     // Load PDF
                     pdfjsLib.getDocument(url).promise.then(pdf => {
                         pdfDoc = pdf;
-                        document.getElementById('pdfModalTitle').textContent = `Previewing: ${url.split('/').pop()}`;
                         document.getElementById('page-count').textContent = `/ ${pdf.numPages}`;
 
                         // Hide spinner, show viewer when ready to render
@@ -242,11 +249,8 @@
                     })
                     .catch(err => {
                         console.error('PDF error:', err);
-                        document.getElementById('pdf-loading-spinner').innerHTML = `
-                            <div class="alert alert-danger">
-                            Failed to load PDF. <button class="btn btn-sm btn-link" onclick="window.location.reload()">Retry</button>
-                            </div>
-                        `;
+                        document.getElementById('pdf-loading-spinner').style.display = 'none';
+                        document.getElementById('pdf-loading-error').style.display = 'block';
                     });
 
                     // Set up download button for PDF

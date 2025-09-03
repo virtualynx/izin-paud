@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\TrxRequest;
 use App\Models\TrxRequestDocument;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class PermitController extends Controller
@@ -37,6 +36,10 @@ class PermitController extends Controller
         $documents = json_decode(json_encode($request->documents), true);
 
         foreach($documents as &$doc){
+            $path_arr = explode("/", $doc['file_path']);
+            $filename = $path_arr[count($path_arr)-1];
+            $doc['filename'] = $filename;
+
             $doc['mime'] = Storage::disk()->mimeType($doc['file_path']);
         }
         unset($doc);
@@ -60,9 +63,28 @@ class PermitController extends Controller
         $path_arr = explode("/", $req_doc->file_path);
         $filename = $path_arr[count($path_arr)-1];
 
-        return Storage::disk()->response($req_doc->file_path, null, [
+        $filePath = Storage::disk()->path($req_doc->file_path);
+        $lastModified = filemtime($filePath);
+        $etag = md5_file($filePath);
+
+        // Check if client has cached version
+        $ifModifiedSince = request()->header('If-Modified-Since');
+        $ifNoneMatch = request()->header('If-None-Match');
+        
+        if (($ifModifiedSince && strtotime($ifModifiedSince) === $lastModified) || 
+            ($ifNoneMatch && $ifNoneMatch === $etag)) {
+            return response()->json(null, 304); // Not Modified
+        }
+
+        $headers = [
             'Content-Type' => Storage::disk()->mimeType($req_doc->file_path),
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
-        ]);
+            'Cache-Control' => 'public, max-age=31536000', // 1 year
+            'Expires' => gmdate('D, d M Y H:i:s \G\M\T', time() + 31536000),
+            'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
+            'ETag' => $etag,
+        ];
+
+        return Storage::disk()->response($req_doc->file_path, null, $headers);
     }
 }

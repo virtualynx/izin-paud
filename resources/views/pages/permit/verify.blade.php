@@ -78,21 +78,18 @@
                                     <tr>
                                         <td>{{ $index++ }}</td>
                                         <td>{{ $doc->doctype->name }} {!! $doc->doctype->is_optional? '<span class="text-muted">(opsional)</span>': '<span class="text-danger">*wajib</span>' !!}</td>
-                                        <?php
-                                            $path_arr = explode("/", $doc->file_path);
-                                            $filename = $path_arr[count($path_arr)-1];
-                                        ?>
                                         <td>
                                             <button 
                                                 type="button" 
                                                 class="btn btn-sm btn-outline-primary preview-pdf" 
                                                 data-req_doc_id="{{ $doc->req_doc_id }}"
+                                                data-filename="{{ $doc->filename }}"
                                                 data-mime="{{ $doc->mime }}"
                                                 data-url="{{ url('permit/document/preview').'/'.$doc->req_doc_id }}"
                                             >
                                                 <i class="bi bi-eye"></i> Lihat File
                                             </button>
-                                            <span class="ms-2">{{ $filename }}</span>
+                                            <span class="ms-2">{{ $doc->filename }}</span>
                                         </td>
                                         <td>
                                             <?php
