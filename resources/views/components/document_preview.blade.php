@@ -147,7 +147,7 @@
                 
                 document.getElementById('pdf-loading-error').style.display = 'none';
 
-                $('#pdfModal').find('.modal-title').html(`View file: ${filename}`);
+                $('#pdfModal').find('.modal-title').html(`View: ${filename}`);
 
                 pdfModal.show();
                 
@@ -156,6 +156,8 @@
                 } else {
                     loadAndRenderPdf(fileUrl);
                 }
+
+                $('#pdfModal').find('#pdf-download-btn').attr('href', `${fileUrl}?action=download`);
 
                 const parentUrl = $(this).data('parent_url');
                 if(typeof parentUrl === 'string' && parentUrl.trim().length > 0){
@@ -185,12 +187,6 @@
                 
                 // Set image source
                 imageElement.src = url;
-                
-                // Set up download button for image
-                const downloadBtn = document.getElementById('pdf-download-btn');
-                const filename = url.split('/').pop() || 'image.jpg';
-                downloadBtn.setAttribute('download', filename);
-                downloadBtn.setAttribute('href', url);
             }
 
             // PDF Loading and Rendering
@@ -252,12 +248,6 @@
                         document.getElementById('pdf-loading-spinner').style.display = 'none';
                         document.getElementById('pdf-loading-error').style.display = 'block';
                     });
-
-                    // Set up download button for PDF
-                    const downloadBtn = document.getElementById('pdf-download-btn');
-                    const filename = url.split('/').pop() || 'document.pdf';
-                    downloadBtn.setAttribute('download', filename);
-                    downloadBtn.setAttribute('href', url);
                 });
             }
 

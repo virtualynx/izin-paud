@@ -53,6 +53,8 @@ class PermitController extends Controller
     }
 
     public function document_preview($req_doc_id){
+        $params = request()->all();
+
         $user = userinfo();
 
         $req_doc = TrxRequestDocument::query()
@@ -76,9 +78,14 @@ class PermitController extends Controller
             return response()->json(null, 304); // Not Modified
         }
 
+        // Tentukan Content-Disposition berdasarkan action
+        $contentDisposition = !empty($params['action']) && $params['action'] == 'download' 
+            ? 'attachment; filename="' . $filename . '"' // Force download
+            : 'inline; filename="' . $filename . '"';    // Preview in browser
+
         $headers = [
             'Content-Type' => Storage::disk()->mimeType($req_doc->file_path),
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Content-Disposition' => $contentDisposition,
             'Cache-Control' => 'public, max-age=31536000', // 1 year
             'Expires' => gmdate('D, d M Y H:i:s \G\M\T', time() + 31536000),
             'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
