@@ -45,7 +45,7 @@ class PermitApi extends Controller
         ];
 
         $doctypes = DoctypeRequirement::where('is_disabled', 0)->get();
-        $maxSizeInBytes = 2048;
+        $maxSizeInBytes = 10 * 1024;
         foreach($doctypes as $row){
             if($row->is_optional == 1 && empty($params[$row->doctypereq_id])){
                 continue;
@@ -132,15 +132,13 @@ class PermitApi extends Controller
             }
             
             DB::commit();
-            
-            $response->message = 'Pengajuan izin operasional PAUD berhasil dikirim.';
         } catch (\Exception $e) {
             DB::rollBack();
             $response->status = $e->getCode();
             $response->message = $e->getMessage();
         }
 
-        return response()->json(new ApiResponse($response));
+        return response()->json($response);
     }
 
     public function list(){

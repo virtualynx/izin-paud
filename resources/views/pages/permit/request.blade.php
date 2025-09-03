@@ -154,7 +154,7 @@
                         <h4 class="mb-0">Upload Dokumen Persyaratan Izin Operasional PAUD</h4>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-4">Silakan upload dokumen persyaratan sesuai dengan daftar di bawah ini. Format file yang diterima: PDF, JPG, JPEG, PNG (Maks. 2MB per file)</p>
+                        <p class="text-muted mb-4">Silakan upload dokumen persyaratan sesuai dengan daftar di bawah ini. Format file yang diterima: PDF, JPG, JPEG, PNG</p>
                         
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover">
@@ -194,6 +194,8 @@
 {{-- on page load --}}
 @push('scripts')
     <script>
+        const uploadMaxSizeMb = 10;
+
         $(document).ready(function() {
             $.ajax({
                 url: `{{ url('/api/permit/docrec/list') }}`,
@@ -223,7 +225,7 @@
                                                 accept="image/png, image/jpeg, image/jpg"
                                                 multiple 
                                                 data-allow-reorder="true"
-                                                data-max-file-size="2MB"
+                                                data-max-file-size="${uploadMaxSizeMb}MB"
                                                 data-max-files="10"
                                                 ${a.is_optional == 0 ? 'required' : ''}
                                             >
@@ -252,7 +254,7 @@
                                                     accept=".pdf,.jpg,.jpeg,.png" 
                                                     ${a.is_optional == 0 ? 'required' : ''}
                                                 >
-                                                <small class="text-muted">Maks. 2MB</small>
+                                                <small class="text-muted">Maks. ${uploadMaxSizeMb}MB</small>
                                             </div>
                                         </td>
                                     </tr>
@@ -431,8 +433,8 @@
             if (!file) return;
             
             // Check file size
-            if (file.size > 2 * 1024 * 1024) {
-                alert(`File ${file.name} melebihi ukuran maksimum 2MB`);
+            if (file.size > uploadMaxSizeMb * 1024 * 1024) {
+                alert(`File ${file.name} melebihi ukuran maksimum ${uploadMaxSizeMb}MB`);
                 $(this).val('');
                 return;
             }
@@ -638,21 +640,41 @@
             }
 
             // Validate that location is selected
+            let lat = $('[name="lat"]').val();
+            let lng = $('[name="lng"]').val();
+            console.log('lat', lat);
+            console.log('lng', lng);
             if (!$('[name="lat"]').val() || !$('[name="lng"]').val()) {
-                alert('Harap pilih lokasi di peta.');
-
-                // Scroll to the map container
-                $('html, body').animate({
-                    scrollTop: $('#mapContainer').offset().top - 100 // Adjust offset as needed
-                }, 500);
-
-                // Highlight the map container
-                $('#mapContainer').css('border', '2px solid red');
+                // alert('Harap pilih lokasi di peta');
                 
-                // Remove highlight after 3 seconds
-                setTimeout(function() {
-                    $('#mapContainer').css('border', '1px solid #ddd');
-                }, 3000);
+                Modal.show(
+                    `<div class="text-center">
+                        <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">Harap pilih titik lokasi di peta</h4>
+                    </div>`,
+                    'Warning',
+                    {
+                        label: 'Ok', 
+                        callback: function(event){
+                            // console.log('Primary-Button clicked');
+                            window.Modal.hide();
+                            
+                            // Scroll to the map container
+                            $('html, body').animate({
+                                scrollTop: $('#mapContainer').offset().top - 100 // Adjust offset as needed
+                            }, 500);
+
+                            // Highlight the map container
+                            $('#mapContainer').css('border', '2px solid red');
+                            
+                            // Remove highlight after 3 seconds
+                            setTimeout(function() {
+                                $('#mapContainer').css('border', '1px solid #ddd');
+                            }, 3000);
+                        }
+                    },
+                    false
+                );
 
                 return;
             }
@@ -679,23 +701,15 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    if (response.success) {
+                    console.log('response', response);
+                    if (response.status == 0) {
                         // Show success message
                         Modal.show(
                             `<div class="text-center">
                                 <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
                                 <h4 class="mt-3">Pengajuan Berhasil!</h4>
-                                <p>${response.message}</p>
-                                <p>Nomor Registrasi: <strong>${response.registration_number || 'N/A'}</strong></p>
                             </div>`,
-                            'Sukses',
-                            {
-                                label: 'Tutup', 
-                                callback: function() {
-                                    // Redirect or reset form
-                                    window.location.href = response.redirect_url || '/';
-                                }
-                            }
+                            'Sukses'
                         );
                     } else {
                         // Show error message

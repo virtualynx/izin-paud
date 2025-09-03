@@ -29,6 +29,7 @@
                     window.Modal.hide();
                 }
             },
+            showCancelButton = true
         ){
             // console.log('modal.id', $('#modal_general').attr('id'));
             const jqModal = $('#modal_general');
@@ -64,6 +65,12 @@
             jqModal.off('hidden.bs.modal').on('hidden.bs.modal', function() {
                 window.Modal.hide();
             });
+
+            if(showCancelButton){
+                jqModal.find('.btn-secondary').css('visibility', 'visible');
+            }else{
+                jqModal.find('.btn-secondary').css('visibility', 'hidden');
+            }
             
             modal.show();
         },
