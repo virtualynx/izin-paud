@@ -33,4 +33,19 @@ class TrxRequest extends Model
     {
         return $this->belongsTo(TrxPermitDecree::class, 'req_id', 'req_id');
     }
+
+    public function revision_notes()
+    {
+        return $this->hasMany(TrxRevisionNotes::class, 'req_id', 'req_id')
+            ->where('is_disabled', 0)
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function latest_revision_note()
+    {
+        return $this->hasOne(TrxRevisionNotes::class, 'req_id', 'req_id')
+            ->where('is_disabled', 0)
+            ->whereNull('req_doc_id')
+            ->latest('created_at');
+    }
 }

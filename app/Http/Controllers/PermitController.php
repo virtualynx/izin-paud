@@ -29,6 +29,7 @@ class PermitController extends Controller
     public function page_verify($req_id){
         $request = TrxRequest::query()
             ->with('documents.doctype')
+            ->with('latest_revision_note')
             ->where('is_disabled', 0)
             ->where('req_id', $req_id)
             ->first();

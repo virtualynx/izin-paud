@@ -21,7 +21,8 @@ return new class extends Migration
             $table->uuid('req_id');
             $table->string('doctypereq_id', 25);
             $table->text('file_path')->nullable();
-            $table->enum('verify_status', ['verified', 'revision'])->nullable();
+            $table->enum('verify_status', ['draft', 'pending', 'verified', 'revision'])->default('pending');
+            $table->timestamp('verified_at')->nullable();
             $table->unsignedBigInteger('verified_by')->nullable();
             $table->boolean('is_waived')->default('0'); //will be implemented later
 

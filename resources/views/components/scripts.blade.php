@@ -21,6 +21,41 @@
                 console.log(errorMessage);
             }
         },
+        showBsModal: function(cssSelector){
+            const jqModal = $(cssSelector);
+
+            // Clean up any existing modal instance
+            const existingModal = bootstrap.Modal.getInstance(jqModal[0]);
+            if (existingModal) {
+                existingModal.hide();
+            }
+
+            const modal = new bootstrap.Modal(jqModal[0], {
+                backdrop: 'static' // This prevents closing when clicking outside
+            });
+            
+            // Handle hidden event to clean up
+            jqModal.off('hidden.bs.modal').on('hidden.bs.modal', function() {
+                window.Utils.hideBsModal(cssSelector);
+            });
+            
+            modal.show();
+        },
+        hideBsModal: function(cssSelector){
+            const modal = bootstrap.Modal.getInstance(document.querySelector(cssSelector));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Remove backdrop if it exists
+            $('.modal-backdrop').remove();
+            
+            // Reset body styles
+            $('body').css({
+                'overflow': '',
+                'padding-right': ''
+            }).removeClass('modal-open');
+        },
         saveFormData: function(formId){
             const inputs = $('#'+formId).find('input');
 

@@ -75,7 +75,7 @@
             modal.show();
         },
         hide: function(){
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modal_general'));
+            const modal = bootstrap.Modal.getInstance(document.querySelector('#modal_general'));
             if (modal) {
                 modal.hide();
             }

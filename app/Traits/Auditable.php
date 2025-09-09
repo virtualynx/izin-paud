@@ -17,6 +17,8 @@ trait Auditable
             if(!empty($userinfo)){
                 $model->created_by = $userinfo->user_id;
             }
+
+            $model->updated_at = null;
         });
 
         static::updating(function ($model) {

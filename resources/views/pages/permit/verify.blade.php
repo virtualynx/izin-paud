@@ -5,6 +5,23 @@
 @section('breadcrumbs', 'Verifikasi '.$request->name)
 
 @section('content')
+    {{-- Loading animation for verify-status badges --}}
+    <style>
+        .badge.bg-info {
+            background-color: #0dcaf0 !important;
+        }
+
+        .bi-arrow-repeat.spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
     <div class="row justify-content-center">
         <div class="col-md-11">
             <div class="card shadow">
@@ -70,13 +87,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Data akan diisi oleh JavaScript -->
                                 <?php
                                     $index = 1;
                                 ?>
                                 @foreach ($documents as $doc)
                                     <tr>
-                                        <td>{{ $index++ }}</td>
+                                        <td>{{ $index}}</td>
                                         <td>{{ $doc->doctype->name }} {!! $doc->doctype->is_optional? '<span class="text-muted">(opsional)</span>': '<span class="text-danger">*wajib</span>' !!}</td>
                                         <td>
                                             <button 
@@ -86,6 +102,7 @@
                                                 data-filename="{{ $doc->filename }}"
                                                 data-mime="{{ $doc->mime }}"
                                                 data-url="{{ url('permit/document/preview').'/'.$doc->req_doc_id }}"
+                                                data-index="{{ $index++ }}"
                                             >
                                                 <i class="bi bi-eye"></i> Lihat File
                                             </button>
@@ -93,24 +110,33 @@
                                         </td>
                                         <td>
                                             <?php
-                                                $badge_class = 'bg-warning';
+                                                $badge_class = 'bg-secondary';
                                                 $status = 'pending';
-                                                switch ($doc->verify_status) {
-                                                    case 'verified':
-                                                        $badge_class = 'bg-success';
-                                                        break;
-                                                    case 'revision':
-                                                        $badge_class = 'bg-danger';
-                                                        break;
-                                                    default:
+
+                                                if($doc->verify_status){
+                                                    $status = $doc->verify_status;
+
+                                                    switch ($doc->verify_status) {
+                                                        case 'verified':
+                                                            $badge_class = 'bg-success';
+                                                            break;
+                                                        case 'revision':
+                                                            $badge_class = 'bg-warning';
+                                                            break;
+                                                        default:
+                                                    }
                                                 }
                                             ?>
                                             <span class="badge {{ $badge_class }}">
-                                                {{ $status }}
+                                                <span class="verify-status">{{ $status }}</span>
                                             </span>
                                         </td>
                                         <td>
-                                            <select class="form-select form-select-sm doc-status" data-req_doc_id="{{ $doc->req_doc_id }}">
+                                            <select 
+                                                class="form-select form-select-sm doc-status" 
+                                                data-req_doc_id="{{ $doc->req_doc_id }}"
+                                                data-doctypereq_id="{{ $doc->doctypereq_id }}"
+                                            >
                                                 <option value="pending" {{ $status=='pending'? 'selected': '' }}>Pending</option>
                                                 <option value="verified" {{ $status=='verified'? 'selected': '' }}>Verified</option>
                                                 <option value="revision" {{ $status=='revision'? 'selected': '' }}>Revision</option>
@@ -122,23 +148,53 @@
                         </table>
                     </div>
 
-                    <!-- Catatan dan Tindakan -->
+                    {{-- Catatan Revisi --}}
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="card">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0">Catatan Verifikasi</h6>
+                                    <h6 class="mb-0">Catatan Revisi Dokumen</h6>
                                 </div>
                                 <div class="card-body">
-                                    <textarea id="verificationNotes" class="form-control" rows="3" 
-                                            placeholder="Tambahkan catatan verifikasi (opsional)"></textarea>
+                                    <table id="table_revnotes" class="table table-bordered table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="5%">No</th>
+                                                <th width="40%">Jenis Dokumen</th>
+                                                <th>Catatan</th>
+                                                <th width="15%">Ubah</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catatan Pemeriksa -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Catatan Pemeriksa</h6>
+                                </div>
+                                <div class="card-body">
+                                    <textarea 
+                                        id="verificationNotes" 
+                                        class="form-control" 
+                                        rows="3" 
+                                        placeholder="Catatan dari pemeriksa (opsional)"
+                                    >{{ !empty($request->latest_revision_note)? $request->latest_revision_note: '' }}</textarea>
                                     
-                                    <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button id="rejectBtn" class="btn btn-danger">
-                                            <i class="bi bi-x-circle"></i> Tolak Pengajuan
+                                    <div id="send-button-group" class="d-flex justify-content-end gap-2 mt-3">
+                                        <button id="revise-btn" class="btn btn-warning">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Revisi
                                         </button>
-                                        <button id="verifyBtn" class="btn btn-success">
-                                            <i class="bi bi-check-circle"></i> Setujui Verifikasi
+                                        <button id="verify-btn" class="btn btn-success">
+                                            <i class="bi bi-check-circle"></i> Lanjutkan Proses
                                         </button>
                                     </div>
                                 </div>
@@ -152,22 +208,171 @@
 
     @include('components.document_preview')
 
+    <!-- Modal Add Revision Notes -->
+    <style>
+        .bi.spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .response-icon {
+            margin-right: 8px;
+        }
+    </style>
+    <div class="modal fade" id="modal_revision_notes" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Catatan Revisi <span class="doctype"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form>
+                    <input type="hidden" name="req_id" value="{{ $request->req_id }}">
+                    <input type="hidden" name="req_doc_id" value="">
+                    <input type="hidden" name="rev_note_id" value="">
+                    
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Catatan Revisi</span></label>
+                                <textarea name="revision_notes" class="form-control" rows="3" placeholder="Catatan Revisi"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Response Message Row -->
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div id="responseMessage" class="alert d-none">
+                                    <i class="response-icon"></i>
+                                    <span class="response-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script>
-        // $(document).ready(function() {
-        //     $('#table_documents').on('click', '.btn-preview', function(event) {
-        //         const fileUrl = $(this).data('url');
+        const modalRevNotes = $('#modal_revision_notes');
 
-        //         // Trigger modal preview dari component document_preview
-        //         $('.preview-pdf').trigger('click', [{
-        //             url: fileUrl,
-        //             parent_url: '',
-        //             parent_doc_number: ''
-        //         }]);
-        //     });
-        // });
+        $(document).ready(function() {
+            // $('.doc-status').on('change', function(e){
+            //     const req_doc_id = $(this).data('req_doc_id');
+            //     const val = $(this).val();
+
+            //     //update status
+            //     $.ajax({
+            //         url: '{{ url("api/permit/reqdoc_update") }}',
+            //         type: 'POST',
+            //         data: {
+            //             req_doc_id: req_doc_id,
+            //             verify_status: val
+            //         },
+            //         // processData: false,
+            //         // contentType: 'json',
+            //         dataType: 'json',
+            //         headers: {
+            //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            //         },
+            //         success: function(response) {
+            //             if (response.status == 0) {
+            //                 renderButtonVerify();
+            //                 if(response.message == 'notes updated'){
+            //                     renderRevisionNotes();
+            //                 }
+            //             }else{
+            //                 // Show error message
+            //                 Modal.show(
+            //                     `<div class="text-center">
+            //                         <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+            //                         <h4 class="mt-3">Terjadi Kesalahan</h4>
+            //                         <p>${response.message}</p>
+            //                     </div>`,
+            //                     'Error'
+            //                 );
+            //             }
+            //         },
+            //         error: Utils.ajaxErrorHandler,
+            //         complete: function() {
+            //         }
+            //     });
+
+            //     if(val == 'revision'){
+            //         const doctypereq_id = $(this).data('doctypereq_id');
+            //         editRevisionNotes(req_doc_id, doctypereq_id);
+            //     }
+            // });
+
+            // Update the doc-status change event handler
+            $('.doc-status').on('change', function(e){
+                const $dropdown = $(this);
+                const req_doc_id = $dropdown.data('req_doc_id');
+                const val = $dropdown.val();
+                const $statusBadge = $dropdown.closest('tr').find('.verify-status');
+                const $badgeContainer = $statusBadge.closest('.badge');
+
+                // If changing to revision, just open the modal without changing status yet
+                if(val == 'revision'){
+                    const doctypereq_id = $dropdown.data('doctypereq_id');
+                    editRevisionNotes(req_doc_id, doctypereq_id);
+                    
+                    // Store the intended value but don't update UI yet
+                    $dropdown.data('pending-value', val);
+                    
+                    // Revert the dropdown to its previous value
+                    const previousValue = $dropdown.data('previous-value') || 'pending';
+                    $dropdown.val(previousValue);
+                    
+                    return; // Exit early
+                }
+                
+                // For other status changes (verified/pending), use the reusable function
+                updateDocumentStatus(
+                    req_doc_id,
+                    val,
+                    $dropdown,
+                    $statusBadge,
+                    $badgeContainer,
+                    function(response) {
+                        // Success callback
+                        if(response.message == 'notes updated'){
+                            renderRevisionNotes();
+                        }
+                        renderButtonVerify();
+                    },
+                    function(errorResponse) {
+                        // Error callback
+                        // Revert dropdown on error
+                        $dropdown.val($dropdown.data('previous-value') || 'pending');
+                        
+                        // Show error message
+                        Modal.show(
+                            `<div class="text-center">
+                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Terjadi Kesalahan</h4>
+                                <p>${errorResponse.message}</p>
+                            </div>`,
+                            'Error'
+                        );
+                    }
+                );
+            });
+
+            renderRevisionNotes();
+            renderButtonVerify();
+        });
 
         function getStatusBadgeClass(status) {
             switch(status) {
@@ -176,5 +381,443 @@
                 default: return 'bg-warning';
             }
         }
+
+        function updateDocumentStatus(req_doc_id, status, $dropdown, $statusBadge, $badgeContainer, successCallback, errorCallback) {
+            // Show loading state
+            $dropdown.prop('disabled', true);
+            $statusBadge.html('<i class="bi bi-arrow-repeat spin"></i>');
+            $badgeContainer.removeClass('bg-success bg-warning bg-secondary').addClass('bg-info');
+
+            // Update status via API
+            $.ajax({
+                url: '{{ url("api/permit/reqdoc_update") }}',
+                type: 'POST',
+                data: {
+                    req_doc_id: req_doc_id,
+                    verify_status: status
+                },
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.status == 0) {
+                        // Update status display
+                        let badgeClass = 'bg-secondary';
+                        let statusText = 'pending';
+                        
+                        switch(status) {
+                            case 'verified':
+                                badgeClass = 'bg-success';
+                                statusText = 'verified';
+                                break;
+                            case 'revision':
+                                badgeClass = 'bg-warning';
+                                statusText = 'revision';
+                                break;
+                        }
+                        
+                        $statusBadge.text(statusText);
+                        $badgeContainer.removeClass('bg-info bg-success bg-warning bg-secondary').addClass(badgeClass);
+                        
+                        if (successCallback) successCallback(response);
+                    } else {
+                        if (errorCallback) errorCallback(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (errorCallback) errorCallback(xhr, status, error);
+                },
+                complete: function() {
+                    $dropdown.prop('disabled', false);
+                    // Store current value for potential revert
+                    $dropdown.data('previous-value', status);
+                }
+            });
+        }
+
+        function renderRevisionNotes(){
+            $.ajax({
+                url: '{{ url("api/permit/revision_notes/list")."/".$request->req_id }}',
+                type: 'GET',
+                data: {},
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.status == 0) {
+                        const tbody = $('#table_revnotes').find('tbody');
+                        tbody.empty();
+
+                        const temp_arr = [];
+                        response.data.docreq_notes.forEach(row => {
+                            if(row.is_resolved == 1)return;
+
+                            const index = $(`[data-req_doc_id="${row.req_doc_id}"]`).data('index');
+
+                            temp_arr.push({
+                                index: index,
+                                doctype: row.request_document.doctype.name,
+                                rev_note_id: row.rev_note_id,
+                                notes: row.notes,
+                                req_doc_id: row.req_doc_id
+                            });
+                            
+                            // tbody.append(`
+                            //     <tr>
+                            //         <td>${ index }</td>
+                            //         <td>${ row.request_document.doctype.name }</td>
+                            //         <td id="revision_notes-data-${ row.rev_note_id }">${ row.notes }</td>
+                            //         <td>
+                            //             <button 
+                            //                 type="button" 
+                            //                 class="btn btn-primary"
+                            //                 onclick="editRevisionNotes('${row.req_doc_id}', '${row.request_document.doctype.name}', '${row.rev_note_id}')"
+                            //             >Ubah</button>
+                            //         </td>
+                            //     </tr>
+                            // `);
+                        });
+
+                        temp_arr.sort((a, b) => a.index - b.index);
+
+                        temp_arr.forEach(row => {
+                            tbody.append(`
+                                <tr>
+                                    <td>${ row.index }</td>
+                                    <td>${ row.doctype }</td>
+                                    <td id="revision_notes-data-${ row.rev_note_id }">${ row.notes }</td>
+                                    <td>
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-primary"
+                                            onclick="editRevisionNotes('${row.req_doc_id}', '${row.doctype}', '${row.rev_note_id}')"
+                                        >Ubah</button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        // Show error message
+                        Modal.show(
+                            `<div class="text-center">
+                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Terjadi Kesalahan</h4>
+                                <p>${response.message}</p>
+                            </div>`,
+                            'Error'
+                        );
+                    }
+                },
+                error: Utils.ajaxErrorHandler,
+                complete: function() {
+                }
+            });
+        }
+
+        function editRevisionNotes(req_doc_id, doctype, rev_note_id = null){
+            modalRevNotes.find('[name="req_doc_id"]').val(req_doc_id);
+            modalRevNotes.find('.doctype').html(doctype);
+
+            if(rev_note_id){
+                let existingNotes = $(`#revision_notes-data-${ rev_note_id }`).html();
+                modalRevNotes.find('[name="revision_notes"]').val(existingNotes);
+                modalRevNotes.find('[name="rev_note_id"]').val(rev_note_id);
+            }else{
+                modalRevNotes.find('[name="rev_note_id"]').val('');
+                modalRevNotes.find('[name="revision_notes"]').val('');
+            }
+
+            Utils.showBsModal('#modal_revision_notes');
+        }
+
+        // function renderButtonVerify(){
+        //     let allVerified = true;
+    
+        //     // Check each document status
+        //     $('.verify-status').each(function() {
+        //         if ($(this).text() !== 'verified') {
+        //             allVerified = false;
+        //             return false; // Break out of the loop early if any status is not verified
+        //         }
+        //     });
+            
+        //     // Enable/disable the verify button based on the status
+        //     if (allVerified) {
+        //         $('#verify-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
+        //     } else {
+        //         $('#verify-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
+        //     }
+        // }
+
+        function renderButtonVerify(){
+            let allVerified = true;
+            let hasRevision = false;
+
+            // Check each document status
+            $('.verify-status').each(function() {
+                const status = $(this).text().trim();
+                if (status !== 'verified') {
+                    allVerified = false;
+                    if (status === 'revision') {
+                        hasRevision = true;
+                    }
+                }
+            });
+            
+            // Update status badge in header
+            let overallStatus = 'pending';
+            let overallBadgeClass = 'bg-secondary';
+            
+            if (allVerified) {
+                overallStatus = 'verified';
+                overallBadgeClass = 'bg-success';
+            } else if (hasRevision) {
+                overallStatus = 'revision needed';
+                overallBadgeClass = 'bg-warning';
+            }
+            
+            $('#statusBadge')
+                .text(overallStatus)
+                .removeClass('bg-success bg-warning bg-secondary bg-info')
+                .addClass(overallBadgeClass);
+            
+            // Enable/disable the verify button based on the status
+            if (allVerified) {
+                $('#verify-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
+            } else {
+                $('#verify-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
+            }
+        }
+
+        // $('#modal_revision_notes').find('form').on('submit', function(e) {
+        //     e.preventDefault();
+
+        //     let formData = new FormData(this);
+
+        //     // Hide any previous response messages
+        //     $('#responseMessage').addClass('d-none');
+            
+        //     // Show loading state
+        //     const submitButton = $(this).find('button[type="submit"]');
+        //     const originalText = submitButton.html();
+        //     submitButton.prop('disabled', true).html('<i class="bi bi-arrow-repeat spin"></i> Menyimpan...');
+
+        //     // Submit via AJAX
+        //     $.ajax({
+        //         url: '{{ url("api/permit/revision_notes/update") }}',
+        //         type: 'POST',
+        //         data: formData,
+        //         processData: false,
+        //         contentType: false,
+        //         headers: {
+        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //         },
+        //         success: function(response) {
+        //             const responseMessage = $('#responseMessage');
+
+        //             if (response.status == 0) {
+        //                 // Show success message
+        //                 responseMessage
+        //                     .removeClass('d-none alert-danger')
+        //                     .addClass('alert-success')
+        //                     .html('<i class="bi bi-check-circle-fill"></i> Catatan revisi berhasil disimpan!');
+
+        //                 renderRevisionNotes();
+        //             } else {
+        //                 // Show error message
+        //                 responseMessage
+        //                     .removeClass('d-none alert-success')
+        //                     .addClass('alert-danger')
+        //                     .html(`<i class="bi bi-exclamation-circle-fill"></i> ${response.message || 'Terjadi kesalahan'}`);
+        //             }
+        //         },
+        //         error: function(xhr, status, error) {
+        //             const responseMessage = $('#responseMessage');
+        //             responseMessage.removeClass('d-none alert-success')
+        //                 .addClass('alert-danger')
+        //                 .html(`<i class="bi bi-exclamation-circle-fill"></i> Error: ${xhr.statusText || 'Terjadi kesalahan jaringan'}`);
+                        
+        //             Utils.ajaxErrorHandler(xhr, status, error);
+        //         },
+        //         complete: function() {
+        //             // Re-enable submit button
+        //             submitButton.prop('disabled', false).html(originalText);
+        //         }
+        //     });
+        // });
+
+        $('#modal_revision_notes').find('form').on('submit', function(e) {
+            e.preventDefault();
+
+            let formData = new FormData(this);
+            const req_doc_id = formData.get('req_doc_id');
+            const $dropdown = $(`[data-req_doc_id="${req_doc_id}"]`);
+            const $statusBadge = $dropdown.closest('tr').find('.verify-status');
+            const $badgeContainer = $statusBadge.closest('.badge');
+            const submitButton = $(this).find('button[type="submit"]');
+
+            // Hide any previous response messages
+            $('#responseMessage').addClass('d-none');
+            
+            // Show loading state
+            submitButton.prop('disabled', true).html('<i class="bi bi-arrow-repeat spin"></i> Menyimpan...');
+
+            // Submit revision notes via AJAX
+            $.ajax({
+                url: '{{ url("api/permit/revision_notes/update") }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    const responseMessage = $('#responseMessage');
+
+                    if (response.status == 0) {
+                        // Show success message
+                        responseMessage
+                            .removeClass('d-none alert-danger')
+                            .addClass('alert-success')
+                            .html('<i class="bi bi-check-circle-fill"></i> Catatan revisi berhasil disimpan!');
+                        
+                        // Now update the document status to revision
+                        // Show loading state for document status update
+                        $dropdown.prop('disabled', true);
+                        $statusBadge.html('<i class="bi bi-arrow-repeat spin"></i>');
+                        $badgeContainer.removeClass('bg-success bg-warning bg-secondary').addClass('bg-info');
+                        
+                        // Update document status via API
+                        $.ajax({
+                            url: '{{ url("api/permit/reqdoc_update") }}',
+                            type: 'POST',
+                            data: {
+                                req_doc_id: req_doc_id,
+                                verify_status: 'revision'
+                            },
+                            dataType: 'json',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(statusResponse) {
+                                if (statusResponse.status == 0) {
+                                    // Update status display
+                                    $statusBadge.text('revision');
+                                    $badgeContainer.removeClass('bg-info bg-success bg-secondary').addClass('bg-warning');
+                                    
+                                    // Update the dropdown value
+                                    $dropdown.val('revision');
+                                    $dropdown.data('previous-value', 'revision');
+                                    
+                                    renderRevisionNotes();
+                                    renderButtonVerify();
+                                    
+                                    // Close the modal after a brief delay
+                                    setTimeout(function() {
+                                        modalRevNotes.modal('hide');
+                                        
+                                        // Reset the modal form
+                                        modalRevNotes.find('form')[0].reset();
+                                        modalRevNotes.find('[name="rev_note_id"]').val('');
+                                        $('#responseMessage').addClass('d-none');
+                                    }, 1500);
+                                } else {
+                                    // Show error message for status update
+                                    responseMessage
+                                        .removeClass('d-none alert-success')
+                                        .addClass('alert-danger')
+                                        .html(`<i class="bi bi-exclamation-circle-fill"></i> ${statusResponse.message || 'Gagal mengubah status dokumen'}`);
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                // Show error message for status update
+                                responseMessage
+                                    .removeClass('d-none alert-success')
+                                    .addClass('alert-danger')
+                                    .html(`<i class="bi bi-exclamation-circle-fill"></i> Error: ${xhr.statusText || 'Terjadi kesalahan jaringan saat mengubah status'}`);
+                            },
+                            complete: function() {
+                                $dropdown.prop('disabled', false);
+                            }
+                        });
+                    } else {
+                        // Show error message for notes update
+                        responseMessage
+                            .removeClass('d-none alert-success')
+                            .addClass('alert-danger')
+                            .html(`<i class="bi bi-exclamation-circle-fill"></i> ${response.message || 'Terjadi kesalahan'}`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    const responseMessage = $('#responseMessage');
+                    responseMessage.removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .html(`<i class="bi bi-exclamation-circle-fill"></i> Error: ${xhr.statusText || 'Terjadi kesalahan jaringan'}`);
+                        
+                    Utils.ajaxErrorHandler(xhr, status, error);
+                },
+                complete: function() {
+                    // Re-enable submit button
+                    submitButton.prop('disabled', false).html('Simpan');
+                }
+            });
+        });
+
+        $('#revise-btn').on('click', function(e) {
+            let formData = new FormData();
+
+            // Hide any previous response messages
+            $('#responseMessage').addClass('d-none');
+            
+            // Show loading state
+            const buttonGroup = $('#send-button-group');
+            const originalText = buttonGroup.html();
+            buttonGroup.prop('disabled', true).html('<i class="bi bi-arrow-repeat spin"></i> Menyimpan...');
+
+            // Submit via AJAX
+            $.ajax({
+                url: '{{ url("api/permit/docreq_update") }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    const responseMessage = $('#responseMessage');
+
+                    if (response.status == 0) {
+                        // Show success message
+                        responseMessage
+                            .removeClass('d-none alert-danger')
+                            .addClass('alert-success')
+                            .html('<i class="bi bi-check-circle-fill"></i> Catatan revisi berhasil disimpan!');
+
+                        renderRevisionNotes();
+                    } else {
+                        // Show error message
+                        responseMessage
+                            .removeClass('d-none alert-success')
+                            .addClass('alert-danger')
+                            .html(`<i class="bi bi-exclamation-circle-fill"></i> ${response.message || 'Terjadi kesalahan'}`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    const responseMessage = $('#responseMessage');
+                    responseMessage.removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .html(`<i class="bi bi-exclamation-circle-fill"></i> Error: ${xhr.statusText || 'Terjadi kesalahan jaringan'}`);
+                        
+                    Utils.ajaxErrorHandler(xhr, status, error);
+                },
+                complete: function() {
+                    // Re-enable submit button
+                    buttonGroup.prop('disabled', false).html(originalText);
+                }
+            });
+        });
     </script>
 @endpush

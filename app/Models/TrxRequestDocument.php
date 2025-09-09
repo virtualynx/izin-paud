@@ -17,6 +17,8 @@ class TrxRequestDocument extends Model
 
     protected $guarded = [];
     
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PENDING = 'pending';
     public const STATUS_VERIFIED = 'verified';
     public const STATUS_REVISION = 'revision';
 

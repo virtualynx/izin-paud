@@ -5,6 +5,8 @@ namespace App\Http\Api;
 use App\Dto\ApiResponse;
 use App\Models\Masters\DoctypeRequirement;
 use App\Models\TrxRequest;
+use App\Models\TrxRequestDocument;
+use App\Models\TrxRevisionNotes;
 use App\Services\PermitService;
 use App\Services\PositionService;
 use Illuminate\Routing\Controller;
@@ -191,5 +193,168 @@ class PermitApi extends Controller
             'recordsFiltered' => $filteredRecords,
             'data' => $data
         ]);
+    }
+
+    public function list_document($req_id){
+        $params = request()->all();
+
+        $request = TrxRequest::query()
+            ->with('documents.doctype')
+            ->where('is_disabled', 0)
+            ->where('req_id', $req_id)
+            ->first();
+
+        $documents = $request->documents;
+
+        return response()->json(new ApiResponse($documents));
+    }
+
+    public function revision_notes_list($req_id){
+        $params = request()->all();
+
+        $response = new ApiResponse();
+
+        $req = TrxRequest::query()
+            ->with('documents')
+            ->where('req_id', $req_id)
+            ->first();
+
+        $req_note = TrxRevisionNotes::query()
+            ->where('req_id', $req_id)
+            ->whereNull('req_doc_id')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $results = [
+            'request_note' => !empty($req_note)? [ 'rev_note_id' => $req_note->rev_note_id, 'notes' => $req_note->notes ]: null,
+            'docreq_notes' => []
+        ];
+
+        $docreq_notes = TrxRevisionNotes::query()
+            ->with('request_document.doctype')
+            ->where('req_id', $req_id)
+            ->whereNotNull('req_doc_id')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $temp_assoc = [];
+        foreach($docreq_notes as $row){
+            if(empty($temp_assoc[$row->req_doc_id])){
+                $temp_assoc[$row->req_doc_id] = $row;
+            }
+        }
+
+        foreach($temp_assoc as $key => $row){
+            $results['docreq_notes'] []= $row;
+        }
+
+        $response->data = $results;
+
+        return response()->json($response);
+    }
+
+    public function revision_notes_update(){
+        $params = request()->all();
+
+        $response = new ApiResponse();
+        try {
+            $note = null;
+
+            if(!empty($params['rev_note_id'])){
+                $note = TrxRevisionNotes::query()
+                    ->where('is_disabled', 0)
+                    ->where('rev_note_id', $params['rev_note_id'])
+                    ->first();
+            }
+
+            if(empty($note)){
+                $note = new TrxRevisionNotes([
+                    'req_id' => $params['req_id'],
+                    'req_doc_id' => $params['req_doc_id'],
+                ]);
+            }
+
+            $note->notes = $params['revision_notes'];
+
+            if(!empty($params['is_resolved'])){
+                $note->is_resolved = $params['is_resolved'];
+            }
+
+            $note->save();
+        } catch (\Exception $e) {
+            $response->status = $e->getCode();
+            $response->message = $e->getMessage();
+        }
+
+        return response()->json($response);
+    }
+
+    public function reqdoc_update(){
+        $params = request()->all();
+
+        $response = new ApiResponse();
+        try {
+            $doc = TrxRequestDocument::where('req_doc_id', $params['req_doc_id'])->first();
+
+            if(!empty($params['verify_status'])){
+                $verify_status = $params['verify_status'];
+                if($doc->verify_status != $verify_status){
+                    $doc->verify_status = $verify_status;
+                }
+
+                if($verify_status == TrxRequestDocument::STATUS_VERIFIED){
+                    $notes = TrxRevisionNotes::query()
+                        ->where('is_disabled', 0)
+                        ->where('req_doc_id', $params['req_doc_id'])
+                        ->get();
+
+                    if(count($notes) > 0){
+                        foreach($notes as $row){
+                            $row->is_resolved = 1;
+                            $row->save();
+                        }
+                        $response->message = 'notes updated';
+                    }
+                }
+            }
+
+            $doc->save();
+        } catch (\Exception $e) {
+            $response->status = $e->getCode();
+            $response->message = $e->getMessage();
+        }
+
+        return response()->json($response);
+    }
+
+    public function request_update(){
+        $params = request()->all();
+
+        $response = new ApiResponse();
+        try {
+            $doc = TrxRequestDocument::where('req_doc_id', $params['req_doc_id'])->first();
+
+            if(!empty($params['verify_status'])){
+                $verify_status = $params['verify_status'] == 'pending'? null: $params['verify_status'];
+                if($doc->verify_status != $verify_status){
+                    $doc->verify_status = $verify_status;
+                }
+
+                if($verify_status == TrxRequestDocument::STATUS_VERIFIED){
+                    $doc->revision_notes = null;
+                    $response->message = 'notes updated';
+                }
+            }
+            if(!empty($params['revision_notes']) && $doc->revision_notes != $params['revision_notes']){
+                $doc->revision_notes = $params['revision_notes'];
+            }
+
+            $doc->save();
+        } catch (\Exception $e) {
+            $response->status = $e->getCode();
+            $response->message = $e->getMessage();
+        }
+
+        return response()->json($response);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Document;
 use App\Models\Masters\Position;
 use App\Models\TrxRequest;
+use App\Models\TrxRequestDocument;
 use App\Models\UserProfile;
 use Exception;
 use Illuminate\Http\UploadedFile;
@@ -24,8 +25,10 @@ class PermitService
     {
         $results = TrxRequest::query()
             ->where('is_disabled', 0)
+            ->where('status', TrxRequest::STATUS_SUBMITTED)
             ->whereHas('documents', function($q) {
-                $q->whereNull('verify_status');
+                $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
+                ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
             })
             ->orderBy('created_at', 'asc')
             ->get();
@@ -37,10 +40,10 @@ class PermitService
     {
         $results = TrxRequest::query()
             ->where('is_disabled', 0)
+            ->where('status', TrxRequest::STATUS_SUBMITTED)
             ->whereHas('documents') // Ensure at least one document exists
             ->whereDoesntHave('documents', function($q) {
-                $q->where('verify_status', '!=', 'verified')
-                ->orWhereNull('verify_status');
+                $q->where('verify_status', '!=', 'verified');
             })
             ->orderBy('created_at', 'asc')
             ->get();
