@@ -5,11 +5,12 @@
         <!-- Main Article -->
         <div class="col-md-8">
             <h2>Tentang {{ config('app.name', '<app_name>') }}</h2>
-            <p><strong>{{ config('app.name', '<app_name>') }}</strong> adalah kondisi gagal tumbuh pada anak akibat kekurangan gizi kronis, terutama sejak dalam kandungan hingga usia dua tahun. Dampaknya tidak hanya pada tinggi badan yang lebih rendah dari standar, tetapi juga pada perkembangan otak, daya tahan tubuh, dan produktivitas di masa depan.</p>
-            <p>Meskipun prevalensi stunting di Indonesia menurun dari 37,2% (2013) menjadi 29,9% (2018), angka ini masih tergolong tinggi. Berdasarkan data kerja Puskesmas Ciapus, tercatat 164 anak mengalami stunting di tiga desa: Sukamakmur (83 anak), Ciapus (44 anak), dan Sukaharja (37 anak). </p>
-            <p>Puskesmas menyusun program inovatif bernama <strong>MASA RANTING (Makan Sehat, Berenang Atasi Stunting)</strong>.</p>
-            <p>Program ini mengombinasikan intervensi gizi dan aktivitas fisik berupa tambahan susu dan telur, edukasi keluarga, serta renang di Kolam Renang Zam-zam Tirta. Target kenaikan berat badan minimal 0,5 kg tiap 2 minggu dan peningkatan status tinggi badan menurut umur.</p>
-            <p>Melalui pendekatan menyenangkan, terarah, dan kolaboratif, MASA RANTING diharapkan menjadi model intervensi gizi anak untuk menciptakan generasi sehat, cerdas, dan produktif.</p>
+            <p>
+                <strong>{{ config('app.name', '<app_name>') }}</strong> (Sistem Informasi Pengajuan Izin Operasional Pendidikan Anak Usia Dini) adalah aplikasi berbasis web yang mempermudah proses pengajuan, verifikasi, hingga penerbitan izin operasional PAUD non-formal. Melalui sistem ini, pemohon dapat mengunggah dokumen persyaratan, memantau status pengajuan secara real-time, dan mengunduh SK izin setelah disetujui. 
+            </p>
+            <p>
+                <strong>{{ config('app.name', '<app_name>') }}</strong> hadir untuk menghadirkan layanan perizinan yang cepat, transparan, dan sesuai regulasi, sekaligus mendukung peningkatan kualitas layanan pendidikan anak usia dini.
+            </p>
         </div>
 
         <!-- Sidebar -->
