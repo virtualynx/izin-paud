@@ -12,10 +12,7 @@
             }
             
             if(window.Modal){
-                Modal.show(
-                    `<span class="text-danger"><div>${errorMessage}</div></span>`,
-                    `<span class="text-danger">Error</span>`
-                )
+                window.Modal.showError(errorMessage || 'Terjadi kesalahan');
             }else{
                 console.error('AJAX Error:', xhr.status, error);
                 console.log(errorMessage);

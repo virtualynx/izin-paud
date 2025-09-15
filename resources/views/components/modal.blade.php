@@ -19,6 +19,48 @@
 
 <script>
     window.Modal = {
+        showInfo: function(
+            message,
+            buttonOkCallback = function(event){
+                window.Modal.hide();
+            },
+            title = 'Info'
+        ){
+            window.Modal.show(
+                `<div class="text-center">
+                    <i class="bi bi-info-circle text-primary" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">${title}</h4>
+                    <p>${message}</p>
+                </div>`,
+                title,
+                {
+                    label: 'Ok', 
+                    callback: buttonOkCallback
+                },
+                false
+            );
+        },
+        showError: function(
+            message,
+            buttonOkCallback = function(event){
+                window.Modal.hide();
+            },
+            title = 'Error'
+        ){
+            window.Modal.show(
+                `<div class="text-center">
+                    <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Terjadi Kesalahan</h4>
+                    <p>${message}</p>
+                </div>`,
+                title,
+                {
+                    label: 'Ok', 
+                    callback: buttonOkCallback
+                },
+                false
+            );
+        },
         show: function(
             body = null, 
             title = null,
