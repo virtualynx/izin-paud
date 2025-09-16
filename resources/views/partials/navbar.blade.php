@@ -49,7 +49,7 @@
                 Petugas
               </a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url('/permit/verification') }}">Verifikasi</a></li>
+                <li><a class="dropdown-item" href="{{ url('/permit/verify_list') }}">Verifikasi</a></li>
                 @if(is_approver())
                   <li><a class="dropdown-item" href="{{ url('/permit/approval') }}">Approval</a></li>
                 @endif
