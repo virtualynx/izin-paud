@@ -19,8 +19,8 @@
                         <thead>
                             <tr>
                                 <th>Nama PAUD</th>
-                                <th>Nomor Registrasi</th>
                                 <th>Tanggal Pengajuan</th>
+                                <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -61,8 +61,9 @@
                 },
                 columns: [
                     { data: 'name', name: 'name' },
-                    { data: 'reg_num', name: 'reg_num' },
                     { data: 'request_date', name: 'request_date'},
+                    // { data: 'reg_num', name: 'reg_num' },
+                    { data: 'status', name: 'status'},
                     {
                         data: 'actions',
                         name: 'actions',

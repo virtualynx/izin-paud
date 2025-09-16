@@ -169,12 +169,12 @@ class PermitApi extends Controller
     public function dt_to_verify_list(PermitService $permitService){
         $params = request()->all();
 
-        // $rs = $permitService->listUnverifiedRequest();
-        $rs = TrxRequest::query()
-            ->where('is_disabled', 0)
-            ->where('status', TrxRequest::STATUS_SUBMITTED)
-            ->orderBy('created_at', 'asc')
-            ->get();
+        $rs = $permitService->listUnverifiedRequest();
+        // $rs = TrxRequest::query()
+        //     ->where('is_disabled', 0)
+        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
+        //     ->orderBy('created_at', 'asc')
+        //     ->get();
 
         $totalRecords = $filteredRecords = count($rs);
 
@@ -187,6 +187,7 @@ class PermitApi extends Controller
                 'reg_num' => $row->reg_num,
                 'name' => $row->name,
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
+                'status' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
                 'is_own' => $row->created_by == $user->user_id
             ];
