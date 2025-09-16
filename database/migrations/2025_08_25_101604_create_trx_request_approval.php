@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\TrxRequestApproval;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +23,11 @@ return new class extends Migration
             $table->integer('level'); //lower means higher
             $table->unsignedBigInteger('approver_user_id');
             $table->string('approver_position_id', 25); //for documentation purpose
-            $table->enum('approval_status', ['approved', 'revision', 'rejected'])->nullable();
+            $table->enum('approval_status', [
+                TrxRequestApproval::STATUS_APPROVED, 
+                TrxRequestApproval::STATUS_REVISION, 
+                TrxRequestApproval::STATUS_REJECTED, 
+            ])->nullable();
             
             $table
                 ->foreign('req_id')

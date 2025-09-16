@@ -15,6 +15,10 @@ class TrxRequestApproval extends Model
     protected $primaryKey = 'req_app_id';
 
     protected $guarded = [];
+    
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REVISION = 'revision';
+    public const STATUS_REJECTED = 'rejected';
 
     public function employee()
     {
