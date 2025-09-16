@@ -18,75 +18,85 @@ class PositionService
     {
         
     }
-    
-    public function generateApprovalSequence(): array
-    {
-        $approvalTree = $this->buildPositionTree();
 
-        $results = [];
-        if(!empty($approvalTree)){
-            $this->approvalTreeToSequence($approvalTree[0], 1, $results);
-            $this->fillEmployeeIntoSequence($results);
-        }
+    public function getPositionSequence($withUserId = false){
+        $results = Cache::remember('position_sequence_'.$withUserId, 10*60, function() use($withUserId){
+            $sequences = [];
+
+            $positionTree = $this->getPositionTree();
+            if(!empty($positionTree)){
+                $this->buildPositionSequence_callback($positionTree[0], 1, $sequences);
+                if($withUserId){
+                    $this->fillSupervisorIdIntoSequence($sequences);
+                }
+            }
+
+            return $sequences;
+        });
 
         return $results;
     }
 
-    private function fillEmployeeIntoSequence($sequence){
-        foreach($sequence as &$loop){
-            $employees = UserProfile::whereHas('positions', function($query) use($loop) {
-                $query->where('mx_employee_position.position_id', $loop['approver_position_id']);
-            })->get();
-
-            if(count($employees) == 0){
-                throw new Exception('No employee set for position_id: '.$loop['approver_position_id']);
-            }
-
-            $loop['approver_user_id'] = $employees[0]->user_id;
-        }
-        unset($loop);
-    }
-
-    private function approvalTreeToSequence($node, $level, &$results){
+    private function buildPositionSequence_callback($node, $level, &$results){
         if(!empty($node['childs'])){
             $position_id = $node['position_id'];
-            $employees = UserProfile::whereHas('positions', function($query) use($position_id) {
-                $query->where('mx_employee_position.position_id', $position_id);
-            })->get();
+            // $employees = UserProfile::whereHas('positions', function($query) use($position_id) {
+            //     $query->where('mx_employee_position.position_id', $position_id);
+            // })->get();
 
             $results []= [
                 'level' => $level,
-                'approver_user_id' => count($employees)>0? $employees[0]->user_id: null,
-                'approver_position_id' => $position_id
+                // 'supervisor_user_id' => count($employees)>0? $employees[0]->user_id: null,
+                'supervisor_position_id' => $position_id
             ];
 
             foreach($node['childs'] as $child){
-                $this->approvalTreeToSequence($child, $level+1, $results);
+                $this->buildPositionSequence_callback($child, $level+1, $results);
             }
         }
     }
     
-    private function buildPositionTree(): array
+    private function fillSupervisorIdIntoSequence(&$sequence){
+        foreach($sequence as &$loop){
+            $employees = UserProfile::whereHas('positions', function($query) use($loop) {
+                $query->where('mx_employee_position.position_id', $loop['supervisor_position_id']);
+            })->get();
+
+            if(count($employees) == 0){
+                throw new Exception('No employee set for position_id: '.$loop['supervisor_position_id']);
+            }
+
+            $loop['supervisor_user_id'] = $employees[0]->user_id;
+        }
+        unset($loop);
+    }
+    
+    public function getPositionTree(): array
     {
-        // Get all positions that are not disabled
-        $positions = Position::where('is_disabled', false)
-            ->orderBy('name')
-            ->get();
+        $results = Cache::remember('position_tree', 10*60, function(){
+            // Get all positions that are not disabled
+            $positions = Position::where('is_disabled', false)
+                ->orderBy('name')
+                ->get();
 
-        if(empty($positions)){
-            return [];
-        }
+            if(empty($positions)){
+                return [];
+            }
 
-        // Find the root positions (those without parent)
-        $rootPositions = $positions->whereNull('parent_position_id');
+            // Find the root positions (those without parent)
+            $rootPositions = $positions->whereNull('parent_position_id');
 
-        // Build the hierarchical structure
-        $result = [];
-        foreach ($rootPositions as $rootPosition) {
-            $result[] = $this->buildPositionTree_callback($rootPosition, $positions);
-        }
+            // Build the hierarchical structure
+            $result = [];
+            foreach ($rootPositions as $rootPosition) {
+                $result[] = $this->buildPositionTree_callback($rootPosition, $positions);
+            }
 
-        return $result;
+            return $result;
+        });
+
+        return $results;
+        
     }
 
     /**

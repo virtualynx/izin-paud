@@ -16,8 +16,9 @@ class TrxRequest extends Model
 
     protected $guarded = [];
 
-    public const STATUS_PENDING = 'draft';
+    public const STATUS_DRAFT = 'draft';
     public const STATUS_SUBMITTED = 'submitted';
+    public const STATUS_VERIFIED = 'verified';
 
     public function approvals()
     {

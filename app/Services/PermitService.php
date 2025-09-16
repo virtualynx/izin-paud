@@ -23,13 +23,19 @@ class PermitService
     
     public function listUnverifiedRequest()
     {
+        // $results = TrxRequest::query()
+        //     ->where('is_disabled', 0)
+        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
+        //     ->whereHas('documents', function($q) {
+        //         $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
+        //         ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
+        //     })
+        //     ->orderBy('created_at', 'asc')
+        //     ->get();
+
         $results = TrxRequest::query()
             ->where('is_disabled', 0)
             ->where('status', TrxRequest::STATUS_SUBMITTED)
-            ->whereHas('documents', function($q) {
-                $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
-                ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
-            })
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -40,10 +46,10 @@ class PermitService
     {
         $results = TrxRequest::query()
             ->where('is_disabled', 0)
-            ->where('status', TrxRequest::STATUS_SUBMITTED)
+            ->where('status', TrxRequest::STATUS_VERIFIED)
             ->whereHas('documents') // Ensure at least one document exists
             ->whereDoesntHave('documents', function($q) {
-                $q->where('verify_status', '!=', 'verified');
+                $q->where('verify_status', '!=', TrxRequestDocument::STATUS_VERIFIED);
             })
             ->orderBy('created_at', 'asc')
             ->get();

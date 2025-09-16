@@ -123,13 +123,13 @@ class PermitApi extends Controller
             }
 
             //generate approval sequence
-            $approvalSequence = $positionService->generateApprovalSequence(); 
+            $approvalSequence = $positionService->getPositionSequence(true); 
             foreach($approvalSequence as $sequence){
                 $new_request->approvals()->create([
                     'req_id' => $new_request->req_id,
                     'level' => $sequence['level'],
-                    'approver_user_id' => $sequence['approver_user_id'],
-                    'approver_position_id' => $sequence['approver_position_id'],
+                    'approver_user_id' => $sequence['supervisor_user_id'],
+                    'approver_position_id' => $sequence['supervisor_position_id'],
                 ]);
             }
             
@@ -169,7 +169,12 @@ class PermitApi extends Controller
     public function dt_to_verify_list(PermitService $permitService){
         $params = request()->all();
 
-        $rs = $permitService->listUnverifiedRequest();
+        // $rs = $permitService->listUnverifiedRequest();
+        $rs = TrxRequest::query()
+            ->where('is_disabled', 0)
+            ->where('status', TrxRequest::STATUS_SUBMITTED)
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         $totalRecords = $filteredRecords = count($rs);
 
@@ -260,18 +265,34 @@ class PermitApi extends Controller
         try {
             $note = null;
 
-            if(!empty($params['rev_note_id'])){
+            if(empty($params['req_doc_id'])){
                 $note = TrxRevisionNotes::query()
-                    ->where('is_disabled', 0)
-                    ->where('rev_note_id', $params['rev_note_id'])
-                    ->first();
-            }
+                        ->where('is_disabled', 0)
+                        ->where('req_id', $params['req_id'])
+                        ->whereNull('req_doc_id')
+                        ->orderBy('created_at', 'desc')
+                        ->first();
 
-            if(empty($note)){
-                $note = new TrxRevisionNotes([
-                    'req_id' => $params['req_id'],
-                    'req_doc_id' => $params['req_doc_id'],
-                ]);
+                if(empty($note)){
+                    $note = new TrxRevisionNotes([
+                        'req_id' => $params['req_id']
+                    ]);
+                }
+            }else{
+                if(!empty($params['rev_note_id'])){
+                    $note = TrxRevisionNotes::query()
+                        ->where('is_disabled', 0)
+                        ->where('rev_note_id', $params['rev_note_id'])
+                        ->first();
+                }
+
+                if(empty($note)){
+                    $note = new TrxRevisionNotes([
+                        'req_id' => $params['req_id'],
+                        'req_doc_id' => $params['req_doc_id'],
+                    ]);
+                }
+
             }
 
             $note->notes = $params['revision_notes'];
@@ -327,29 +348,24 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
-    public function request_update(){
+    public function request_update(PositionService $positionService){
         $params = request()->all();
 
         $response = new ApiResponse();
         try {
-            $doc = TrxRequestDocument::where('req_doc_id', $params['req_doc_id'])->first();
+            $req = TrxRequest::where('req_id', $params['req_id'])->first();
 
-            if(!empty($params['verify_status'])){
-                $verify_status = $params['verify_status'] == 'pending'? null: $params['verify_status'];
-                if($doc->verify_status != $verify_status){
-                    $doc->verify_status = $verify_status;
-                }
+            if($params['status'] == TrxRequest::STATUS_VERIFIED){
+                $userinfo = userinfo(); 
 
-                if($verify_status == TrxRequestDocument::STATUS_VERIFIED){
-                    $doc->revision_notes = null;
-                    $response->message = 'notes updated';
-                }
-            }
-            if(!empty($params['revision_notes']) && $doc->revision_notes != $params['revision_notes']){
-                $doc->revision_notes = $params['revision_notes'];
+                $approvalSeq = $positionService->getPositionSequence(true);
+
+                $a=1;
             }
 
-            $doc->save();
+            $req->status = $params['status'];
+
+            $req->save();
         } catch (\Exception $e) {
             $response->status = $e->getCode();
             $response->message = $e->getMessage();

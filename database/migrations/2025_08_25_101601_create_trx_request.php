@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\TrxRequest;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +20,11 @@ return new class extends Migration
             $table->boolean('is_disabled')->default('0');
             
             $table->string('reg_num', 50);
-            $table->string('status', 25); //draft, submitted
+            $table->enum('status', [
+                TrxRequest::STATUS_DRAFT, 
+                TrxRequest::STATUS_SUBMITTED, 
+                TrxRequest::STATUS_VERIFIED
+            ])->default(TrxRequest::STATUS_SUBMITTED);
 
             $table->string('name', 500);
             $table->string('foundation_type', 255);

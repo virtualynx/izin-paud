@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\TrxRequestDocument;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,7 +22,13 @@ return new class extends Migration
             $table->uuid('req_id');
             $table->string('doctypereq_id', 25);
             $table->text('file_path')->nullable();
-            $table->enum('verify_status', ['draft', 'pending', 'verified', 'revision'])->default('pending');
+            $table->enum('verify_status', [
+                TrxRequestDocument::STATUS_DRAFT, 
+                TrxRequestDocument::STATUS_PENDING, 
+                TrxRequestDocument::STATUS_VERIFIED, 
+                TrxRequestDocument::STATUS_REVISION
+            ])->default(TrxRequestDocument::STATUS_PENDING);
+            
             $table->timestamp('verified_at')->nullable();
             $table->unsignedBigInteger('verified_by')->nullable();
             $table->boolean('is_waived')->default('0'); //will be implemented later
