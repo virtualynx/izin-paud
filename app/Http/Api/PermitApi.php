@@ -187,7 +187,8 @@ class PermitApi extends Controller
                 'reg_num' => $row->reg_num,
                 'name' => $row->name,
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
-                'status' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
+                'status' => $row->status,
+                'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
                 'is_own' => $row->created_by == $user->user_id
             ];

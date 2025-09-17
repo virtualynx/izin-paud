@@ -1,3 +1,7 @@
+@php
+    use App\Models\TrxRequest;
+@endphp
+
 @extends('app')
 
 @section('title', config('app.name').'- Verifikasi')
@@ -73,7 +77,7 @@
                     { data: 'name', name: 'name' },
                     { data: 'request_date', name: 'request_date'},
                     // { data: 'reg_num', name: 'reg_num' },
-                    { data: 'status', name: 'status'},
+                    { data: 'status_text', name: 'status_text'},
                     {
                         data: 'actions',
                         name: 'actions',
@@ -83,7 +87,7 @@
                             let content = '';
 
                             @if(is_verificator())
-                                if(row.status == 'submitted'){
+                                if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
                                     content += `
                                         <button 
                                             class="btn btn-sm btn-warning verify-btn" 
@@ -96,7 +100,7 @@
                             @endif
                             
                             @if(is_approver())
-                                if(row.status == 'verified'){
+                                if(row.status == '{{ TrxRequest::STATUS_VERIFIED }}'){
                                     content += `
                                         <button 
                                             class="btn btn-sm btn-success approve-btn" 
