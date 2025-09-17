@@ -166,6 +166,39 @@ class PermitApi extends Controller
         return response()->json(new ApiResponse($results));
     }
     
+    public function dt_request_list(PermitService $permitService){
+        $params = request()->all();
+
+        $rs = $permitService->listRequestForUser();
+        // $rs = TrxRequest::query()
+        //     ->where('is_disabled', 0)
+        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
+        //     ->orderBy('created_at', 'asc')
+        //     ->get();
+
+        $totalRecords = $filteredRecords = count($rs);
+
+        $data = [];
+        foreach ($rs as $row) {
+            $data[] = [
+                'req_id' => $row->req_id,
+                'reg_num' => $row->reg_num,
+                'name' => $row->name,
+                'request_date' => $row->created_at->format('d-m-Y H:i'),
+                'status' => $row->status,
+                'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
+                'actions' => null, // Will be filled by JS
+            ];
+        }
+
+        return response()->json([
+            'draw' => $params['draw'],
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ]);
+    }
+    
     public function dt_to_verify_list(PermitService $permitService){
         $params = request()->all();
 

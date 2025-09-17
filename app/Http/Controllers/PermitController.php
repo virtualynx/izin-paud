@@ -22,6 +22,10 @@ class PermitController extends Controller
         return view('pages.permit.request');
     }
 
+    public function request_list(){
+        return view('pages.permit.request_list');
+    }
+
     public function verify_list(){
         return view('pages.permit.verify_list');
     }

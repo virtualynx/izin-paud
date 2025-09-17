@@ -43,6 +43,8 @@
         </li>
 
         @if(is_loggedin())
+          <li class="nav-item"><a class="nav-link" href="{{ url('/permit/request_list') }}">Pengajuan Saya</a></li>
+
           @if(is_verificator() || is_approver())
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">

@@ -21,20 +21,9 @@ class PermitService
     {
         
     }
-    
-    public function listRequestForOfficer()
-    {
-        // $results = TrxRequest::query()
-        //     ->where('is_disabled', 0)
-        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
-        //     ->whereHas('documents', function($q) {
-        //         $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
-        //         ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
-        //     })
-        //     ->orderBy('created_at', 'asc')
-        //     ->get();
 
-        $results = TrxRequest::query()
+    private function _listRequestSelectQuery(){
+        $query = TrxRequest::query()
             ->select("*")
             ->addSelect(DB::raw("
                 CASE 
@@ -130,7 +119,41 @@ class PermitService
                     )
                 END as approval_time
             "
-            ))
+            ));
+        
+        return $query;
+    }
+
+    public function listRequestForUser()
+    {
+        $userinfo = userinfo();
+
+        $query = $this->_listRequestSelectQuery();
+
+        $results = $query
+            ->where('is_disabled', 0)
+            ->where('created_by', $userinfo->user_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return $results;
+    }
+    
+    public function listRequestForOfficer()
+    {
+        // $results = TrxRequest::query()
+        //     ->where('is_disabled', 0)
+        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
+        //     ->whereHas('documents', function($q) {
+        //         $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
+        //         ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
+        //     })
+        //     ->orderBy('created_at', 'asc')
+        //     ->get();
+
+        $query = $this->_listRequestSelectQuery();
+
+        $results = $query
             ->where('is_disabled', 0)
             ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED])
             ->orderBy('created_at', 'asc')

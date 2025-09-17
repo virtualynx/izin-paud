@@ -16,6 +16,7 @@ Route::prefix('sso')->group(function () {
 Route::middleware(['sso_login'])->group(function () {
     Route::prefix('permit')->group(function () {
         Route::get('/request', [PermitController::class, 'page_request']);
+        Route::get('/request_list', [PermitController::class, 'request_list']);
         Route::get('/verify_list', [PermitController::class, 'verify_list']);
         Route::get('/approval', [PermitController::class, 'page_approval']);
         
