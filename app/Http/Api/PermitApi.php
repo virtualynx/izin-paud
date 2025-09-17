@@ -169,7 +169,7 @@ class PermitApi extends Controller
     public function dt_to_verify_list(PermitService $permitService){
         $params = request()->all();
 
-        $rs = $permitService->listUnverifiedRequest();
+        $rs = $permitService->listRequestForOfficer();
         // $rs = TrxRequest::query()
         //     ->where('is_disabled', 0)
         //     ->where('status', TrxRequest::STATUS_SUBMITTED)

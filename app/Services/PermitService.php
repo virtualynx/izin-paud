@@ -22,7 +22,7 @@ class PermitService
         
     }
     
-    public function listUnverifiedRequest()
+    public function listRequestForOfficer()
     {
         // $results = TrxRequest::query()
         //     ->where('is_disabled', 0)
@@ -132,7 +132,7 @@ class PermitService
             "
             ))
             ->where('is_disabled', 0)
-            ->where('status', TrxRequest::STATUS_SUBMITTED)
+            ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED])
             ->orderBy('created_at', 'asc')
             ->get();
 
