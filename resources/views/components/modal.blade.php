@@ -21,9 +21,7 @@
     window.Modal = {
         showInfo: function(
             message,
-            buttonOkCallback = function(event){
-                window.Modal.hide();
-            },
+            buttonOkCallback = null,
             title = 'Info'
         ){
             window.Modal.show(
@@ -35,16 +33,14 @@
                 title,
                 {
                     label: 'Ok', 
-                    callback: buttonOkCallback
+                    callback: buttonOkCallback || function() {} // Can be null or empty
                 },
                 false
             );
         },
         showError: function(
             message,
-            buttonOkCallback = function(event){
-                window.Modal.hide();
-            },
+            buttonOkCallback = null,
             title = 'Error'
         ){
             window.Modal.show(
@@ -56,7 +52,7 @@
                 title,
                 {
                     label: 'Ok', 
-                    callback: buttonOkCallback
+                    callback: buttonOkCallback || function() {} // Can be null or empty
                 },
                 false
             );
@@ -95,8 +91,32 @@
                 jqModal.find('.modal-body').html(body);
             }
 
+            // Wrap the callback to ensure modal closes after custom logic
+            const wrappedCallback = function(event) {
+                try {
+                    // Execute the custom callback
+                    const result = primaryButtonConfig.callback(event);
+                    
+                    // Handle promises if the callback returns one
+                    if (result && typeof result.then === 'function') {
+                        result.then(() => {
+                            window.Modal.hide();
+                        }).catch((error) => {
+                            console.error('Error in modal callback:', error);
+                            window.Modal.hide();
+                        });
+                    } else {
+                        // For synchronous callbacks, close modal after execution
+                        window.Modal.hide();
+                    }
+                } catch (error) {
+                    console.error('Error in modal callback:', error);
+                    window.Modal.hide();
+                }
+            };
+
             jqModal.find('.btn-primary').html(primaryButtonConfig.label);
-            jqModal.find('.btn-primary').on('click', primaryButtonConfig.callback);
+            jqModal.find('.btn-primary').on('click', wrappedCallback);
 
             // Initialize and show modal
             const modal = new bootstrap.Modal(jqModal[0], {
