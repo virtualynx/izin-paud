@@ -70,4 +70,21 @@
 
         }
     };
+
+    window.Loading = {
+        show: function(message = 'Loading ...') {
+            const overlay = $('#globalLoadingOverlay');
+            if (message) {
+                overlay.find('p').text(message);
+            }
+            overlay.removeClass('d-none');
+            // Disable body scrolling
+            $('body').css('overflow', 'hidden');
+        },
+        hide: function() {
+            $('#globalLoadingOverlay').addClass('d-none');
+            // Re-enable body scrolling
+            $('body').css('overflow', 'auto');
+        }
+    };
 </script>
