@@ -57,6 +57,16 @@
                     type: 'POST',
                     data: function(d){
                         d._token = "{{ csrf_token() }}";
+                    },
+                    beforeSend: () => {
+                        Loading.show('Memuat data permohonan...');
+                    },
+                    complete: function() {
+                        Loading.hide();
+                    },
+                    error: function(xhr, error, thrown) {
+                        Loading.hide();
+                        Modal.showError('Gagal memuat data. Silakan coba lagi.');
                     }
                 },
                 columns: [
@@ -72,19 +82,41 @@
                         render: function(data, type, row) {
                             let content = '';
 
-                            @if(is_verificator() || is_approver())
-                                content += `
-                                    <button 
-                                        class="btn btn-sm btn-warning verify-btn" 
-                                        data-req_id="${row.req_id}"
-                                    >
-                                        <i class="bi bi-zoom-in"></i>
-                                    </button>
-                                `;
+                            @if(is_verificator())
+                                if(row.status == 'submitted'){
+                                    content += `
+                                        <button 
+                                            class="btn btn-sm btn-warning verify-btn" 
+                                            data-req_id="${row.req_id}"
+                                        >
+                                            <i class="bi bi-zoom-in"></i>
+                                        </button>
+                                    `;
+                                }
+                            @endif
+                            
+                            @if(is_approver())
+                                if(row.status == 'verified'){
+                                    content += `
+                                        <button 
+                                            class="btn btn-sm btn-success approve-btn" 
+                                            data-req_id="${row.req_id}"
+                                        >
+                                            <i class="bi bi-zoom-in"></i>
+                                        </button>
+                                    `;
+                                }
                             @endif
                             
                             if(row.is_own){
                                 content += `
+                                    <button 
+                                        class="btn btn-sm btn-info view-btn" 
+                                        data-req_id="${row.req_id}"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
                                     <button 
                                         class="btn btn-sm btn-primary edit-btn" 
                                         data-req_id="${row.req_id}"
