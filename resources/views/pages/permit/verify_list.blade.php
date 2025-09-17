@@ -111,32 +111,6 @@
                                     `;
                                 }
                             @endif
-                            
-                            if(row.is_own){
-                                content += `
-                                    <button 
-                                        class="btn btn-sm btn-info view-btn" 
-                                        data-req_id="${row.req_id}"
-                                    >
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                    <button 
-                                        class="btn btn-sm btn-primary edit-btn" 
-                                        data-req_id="${row.req_id}"
-                                    >
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
-                                    
-                                    <button 
-                                        class="btn btn-sm btn-danger delete-btn" 
-                                        data-req_id="${row.req_id}"
-                                        data-name="${row.name}"
-                                    >
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                `;
-                            }
 
                             return `
                                 <div class="btn-group">
