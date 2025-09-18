@@ -61,7 +61,31 @@
           @endif
 
           {{-- <li class="nav-item"><a class="btn btn-primary" href="{{ url('/permit/request') }}">AJUKAN IZIN</a></li> --}}
-          <li class="nav-item"><a class="btn btn-danger" href="{{ url('/sso/logout') }}">Logout</a></li>
+          
+          {{-- <li class="nav-item"><a class="btn btn-danger" href="{{ url('/sso/logout') }}">Logout</a></li> --}}
+        
+          @php
+            $userDisplayName = userinfo()->username ?? userinfo()->email;
+
+            $maxDisplayLength = 10;
+            $trimmedName = strlen($userDisplayName) > $maxDisplayLength ? substr($userDisplayName, 0, $maxDisplayLength) . '...' : $userDisplayName;
+          @endphp
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle me-1"></i> Halo, {{ $trimmedName }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li class="dropdown-item-text">
+                <small>Halo,</small>
+                <div><strong>{{ $userDisplayName }}</strong></div>
+              </li>
+              <li><a class="dropdown-item" href="{{ url('/profile') }}"><i class="bi bi-person me-2"></i>Lihat/Edit Profil</a></li>
+              
+              <li><hr class="dropdown-divider"></li>
+              
+              <li><a class="dropdown-item" href="{{ url('/sso/logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </li>
         @else
           <li class="nav-item"><a class="btn btn-primary" href="{{ url('/sso/login') }}">Login</a></li>
         @endif
