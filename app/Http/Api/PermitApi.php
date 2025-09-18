@@ -5,10 +5,12 @@ namespace App\Http\Api;
 use App\Dto\ApiResponse;
 use App\Models\Masters\DoctypeRequirement;
 use App\Models\TrxRequest;
+use App\Models\TrxRequestApproval;
 use App\Models\TrxRequestDocument;
 use App\Models\TrxRevisionNotes;
 use App\Services\PermitService;
 use App\Services\PositionService;
+use App\Services\UserService;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -199,7 +201,7 @@ class PermitApi extends Controller
         ]);
     }
     
-    public function dt_to_verify_list(PermitService $permitService){
+    public function dt_request_officer_list(PermitService $permitService, UserService $userService){
         $params = request()->all();
 
         $rs = $permitService->listRequestForOfficer();
@@ -209,12 +211,22 @@ class PermitApi extends Controller
         //     ->orderBy('created_at', 'asc')
         //     ->get();
 
-        $totalRecords = $filteredRecords = count($rs);
+        $req_ids = [];
+        foreach ($rs as $row) {
+            $req_ids []= $row->req_id;
+        }
 
         $user = userinfo();
+        $mainPosition = $userService->getMainPosition($user->user_id);
+
+        $req_approval_map = $permitService->getRequestApprovalMap($req_ids);
 
         $data = [];
         foreach ($rs as $row) {
+            $approval = $req_approval_map[$row->req_id];
+
+            $isMyAppoval = !empty($approval) && $approval->approver_position_id == $mainPosition->position_id? true: false;
+            
             $data[] = [
                 'req_id' => $row->req_id,
                 'reg_num' => $row->reg_num,
@@ -223,9 +235,11 @@ class PermitApi extends Controller
                 'status' => $row->status,
                 'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
-                'is_own' => $row->created_by == $user->user_id
+                'is_my_approval' => $isMyAppoval
             ];
         }
+        
+        $totalRecords = $filteredRecords = count($rs);
 
         return response()->json([
             'draw' => $params['draw'],

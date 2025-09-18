@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Document;
 use App\Models\Masters\Position;
 use App\Models\TrxRequest;
+use App\Models\TrxRequestApproval;
 use App\Models\TrxRequestDocument;
 use App\Models\UserProfile;
 use Exception;
@@ -20,6 +21,99 @@ class PermitService
     public function __construct()
     {
         
+    }
+
+    public function listRequestForUser()
+    {
+        $userinfo = userinfo();
+
+        $query = $this->_listRequestSelectQuery();
+
+        $results = $query
+            ->where('is_disabled', 0)
+            ->where('created_by', $userinfo->user_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return $results;
+    }
+    
+    public function listRequestForOfficer()
+    {
+        // $results = TrxRequest::query()
+        //     ->where('is_disabled', 0)
+        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
+        //     ->whereHas('documents', function($q) {
+        //         $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
+        //         ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
+        //     })
+        //     ->orderBy('created_at', 'asc')
+        //     ->get();
+
+        $query = $this->_listRequestSelectQuery();
+        
+        $query = $query
+            ->where('is_disabled', 0)
+            ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED]);
+
+        $results = $query
+            ->where('is_disabled', 0)
+            ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return $results;
+    }
+    
+    public function listApprovalDone()
+    {
+        $results = TrxRequest::query()
+            ->where('is_disabled', 0)
+            ->whereHas('approvals') // Ensure at least one document exists
+            ->whereDoesntHave('approvals', function($q) {
+                $q->where('approval_status', '!=', 'approved')
+                ->orWhereNull('approval_status');
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return $results;
+    }
+
+    public function getRequestApprovalMap(array $req_ids){
+        $approval_rs = TrxRequestApproval::query()
+            ->where('is_disabled', 0)
+            ->whereIn('req_id', $req_ids)
+            ->orderBy('level', 'desc')
+            ->get()
+            ;
+
+        $req_approval_map = [];
+        foreach($approval_rs as $row){
+            if(empty($req_approval_map[$row->req_id])){
+                $req_approval_map[$row->req_id] = [];
+            }
+
+            $req_approval_map[$row->req_id] []= $row;
+        }
+
+        $req_currentapproval_map = [];
+        foreach($req_approval_map as $req_id => $approvals){
+            // if(!empty($req_currentapproval_map[$req_id])){
+            //     continue;
+            // }
+
+            $req_currentapproval_map[$req_id] = null;
+
+            foreach($approvals as $appr){
+                if(empty($appr->approval_status)){
+                    $req_currentapproval_map[$req_id] = $appr;
+                    break;
+                }
+            }
+        }
+
+        return $req_currentapproval_map;
     }
 
     private function _listRequestSelectQuery(){
@@ -122,98 +216,5 @@ class PermitService
             ));
         
         return $query;
-    }
-
-    public function listRequestForUser()
-    {
-        $userinfo = userinfo();
-
-        $query = $this->_listRequestSelectQuery();
-
-        $results = $query
-            ->where('is_disabled', 0)
-            ->where('created_by', $userinfo->user_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return $results;
-    }
-    
-    public function listRequestForOfficer()
-    {
-        // $results = TrxRequest::query()
-        //     ->where('is_disabled', 0)
-        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
-        //     ->whereHas('documents', function($q) {
-        //         $q->where('verify_status', TrxRequestDocument::STATUS_PENDING)
-        //         ->orWhere('verify_status', TrxRequestDocument::STATUS_REVISION);
-        //     })
-        //     ->orderBy('created_at', 'asc')
-        //     ->get();
-
-        $query = $this->_listRequestSelectQuery();
-
-        $results = $query
-            ->where('is_disabled', 0)
-            ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED])
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return $results;
-    }
-    
-    public function listVerifiedRequest()
-    {
-        $results = TrxRequest::query()
-            ->where('is_disabled', 0)
-            ->where('status', TrxRequest::STATUS_VERIFIED)
-            ->whereHas('documents') // Ensure at least one document exists
-            ->whereDoesntHave('documents', function($q) {
-                $q->where('verify_status', '!=', TrxRequestDocument::STATUS_VERIFIED);
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return $results;
-    }
-    
-    public function listApprovalForUser($user_id)
-    {
-        $results = TrxRequest::query()
-            ->where('is_disabled', 0)
-            ->whereHas('approvals', function($q) use($user_id) {
-                $q->query()
-                    ->where('approver_user_id', $user_id)
-                    ->WhereNull('approval_status')
-                    ;
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return $results;
-    }
-    
-    public function listApprovalDone()
-    {
-        $results = TrxRequest::query()
-            ->where('is_disabled', 0)
-            ->whereHas('approvals') // Ensure at least one document exists
-            ->whereDoesntHave('approvals', function($q) {
-                $q->where('approval_status', '!=', 'approved')
-                ->orWhereNull('approval_status');
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return $results;
-    }
-
-    public function fillPermitStatuses($requestList){
-        $req_ids = [];
-        foreach($requestList as $row){
-            $req_ids []= $row->req_id;
-        }
-
-
     }
 }

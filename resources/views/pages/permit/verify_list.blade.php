@@ -57,7 +57,7 @@
                 serverSide: true,
                 searching: false,
                 ajax: {
-                    url: "{{ url('api/permit/dt_to_verify_list') }}",
+                    url: "{{ url('api/permit/dt_request_officer_list') }}",
                     type: 'POST',
                     data: function(d){
                         d._token = "{{ csrf_token() }}";
@@ -85,25 +85,21 @@
                         searchable: false,
                         render: function(data, type, row) {
                             let content = '';
+                            
+                            content += `
+                                <button 
+                                    class="btn btn-sm btn-info view-btn" 
+                                    data-req_id="${row.req_id}"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            `;
 
                             @if(is_verificator())
                                 if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
                                     content += `
                                         <button 
                                             class="btn btn-sm btn-warning verify-btn" 
-                                            data-req_id="${row.req_id}"
-                                        >
-                                            <i class="bi bi-zoom-in"></i>
-                                        </button>
-                                    `;
-                                }
-                            @endif
-                            
-                            @if(is_approver())
-                                if(row.status == '{{ TrxRequest::STATUS_VERIFIED }}'){
-                                    content += `
-                                        <button 
-                                            class="btn btn-sm btn-success approve-btn" 
                                             data-req_id="${row.req_id}"
                                         >
                                             <i class="bi bi-zoom-in"></i>
@@ -126,7 +122,7 @@
                 // ]
             });
             
-            @if(is_verificator() || is_approver())
+            @if(is_verificator())
                 $('#table_permit_wrapper').on('click', '.verify-btn', function(event) {
                     event.preventDefault();
                     // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
@@ -138,54 +134,5 @@
             //     dt_table.ajax.reload();
             // });
         });
-
-        function deleteFile(el){
-            let doc_id = $(el).data('doc_id');
-            console.log('deleteFile - doc_id', doc_id);
-            let filename = $(el).data('filename');
-            console.log('deleteFile - filename', filename);
-
-            modalShow(
-                `Hapus ${filename} ?`,
-                `
-                    Yakin ingin hapus ${filename} ?
-                `,
-                {
-                    label: 'Ya',
-                    callback: function(){
-                        $.ajax({
-                            url: `{{ url('/api/docs/delete') }}/${doc_id}`,
-                            type: 'GET',
-                            success: function(res) {
-                                console.log('res', res);
-                                if(res.status == 0){
-                                    dt_table.ajax.reload();
-                                    modalShow(`
-                                        <span class="text-success">Delete success !!</span>
-                                    `);
-                                }else{
-                                    modalShow(
-                                        `
-                                            <span class="text-danger">
-                                                <div>${res.message}</div>
-                                            </span>
-                                        `,
-                                        `<span class="text-danger">Error</span>`
-                                    );
-                                }
-                            },
-                            error: function(xhr) {
-                                $('#status_message').html(
-                                    `<span class="text-danger">Upload failed</span><br>
-                                    <small>${xhr.responseJSON?.message || 'Server error'}</small>`
-                                );
-                            }
-                        });
-                    }
-                }
-            );
-
-            return true;
-        }
     </script>
 @endpush

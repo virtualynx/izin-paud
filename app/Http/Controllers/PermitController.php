@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\TrxRequest;
 use App\Models\TrxRequestDocument;
+use App\Services\PermitService;
+use App\Services\UserService;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,7 +32,35 @@ class PermitController extends Controller
         return view('pages.permit.verify_list');
     }
 
-    public function page_verify($req_id){
+    public function approval_list(){
+        return view('pages.permit.approval_list');
+    }
+
+    public function page_verify($req_id, UserService $userService, PermitService $permitService){
+        $params = request()->all();
+
+        $user = userinfo();
+
+        $is_approver = false;
+        if(!empty($params['mode']) && $params['mode'] == '1'){
+            if(!is_approver()){
+                abort(403);
+            }
+
+            $req_approval_map = $permitService->getRequestApprovalMap([$req_id]);
+            if($req_approval_map[$req_id] == null){
+                abort(403);
+            }
+
+            $user = userinfo();
+            $mainPosition = $userService->getMainPosition($user->user_id);
+            if($req_approval_map[$req_id]->approver_position_id != $mainPosition->position_id){
+                abort(403);
+            }
+
+            $is_approver = true;
+        }
+
         $request = TrxRequest::query()
             ->with('documents.doctype')
             ->with('latest_revision_note')
@@ -51,9 +81,10 @@ class PermitController extends Controller
 
         $documents = json_decode(json_encode($documents));
 
-        return view('pages.permit.verify', [
+        return view('pages.permit.verify_approve', [
             'request' => $request,
-            'documents' => $documents
+            'documents' => $documents,
+            'is_approver' => $is_approver
         ]);
     }
 

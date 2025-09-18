@@ -17,7 +17,7 @@ Route::prefix('permit')->group(function () {
     Route::get('/list_document/{req_id}', [PermitApi::class, 'list_document']);
 
     Route::post('/dt_request_list', [PermitApi::class, 'dt_request_list']);
-    Route::post('/dt_to_verify_list', [PermitApi::class, 'dt_to_verify_list']);
+    Route::post('/dt_request_officer_list', [PermitApi::class, 'dt_request_officer_list']);
     Route::post('/request_submit', [PermitApi::class, 'request_submit']);
 
     Route::prefix('revision_notes')->group(function () {

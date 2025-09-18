@@ -1,8 +1,17 @@
 @extends('app')
 
-@section('title', 'Verifikasi '.$request->name)
+@php
+    $page_title = $request->name;
+    if($is_approver){
+        $page_title = 'Approve '.$page_title;
+    }else{
+        $page_title = 'Verifikasi '.$page_title;
+    }
+@endphp
 
-@section('breadcrumbs', 'Verifikasi '.$request->name)
+@section('title', $page_title)
+
+@section('breadcrumbs', $page_title)
 
 @section('content')
     {{-- Loading animation for verify-status badges --}}
@@ -203,7 +212,10 @@
                     <div class="row mt-4">
                         <div id="process-btn-wrapper" class="col-md-12 d-flex justify-content-end gap-2 mt-3">
                             <button id="process-btn" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Lanjutkan Proses
+                                @php
+                                    $processBtnLabel = $is_approver? 'Setujui': 'Selesai Verifikasi';
+                                @endphp
+                                <i class="bi bi-check-circle"></i> {{ $processBtnLabel }}
                             </button>
                         </div>
                     </div>

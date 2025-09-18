@@ -4,9 +4,9 @@
 
 @extends('app')
 
-@section('title', config('app.name').'- Pengajuan')
+@section('title', config('app.name').'- Approval')
 
-@section('breadcrumbs', 'Daftar Pengajuan')
+@section('breadcrumbs', 'Approval Pengajuan')
 
 @include('imports.datatable')
 
@@ -57,7 +57,7 @@
                 serverSide: true,
                 searching: false,
                 ajax: {
-                    url: "{{ url('api/permit/dt_request_list') }}",
+                    url: "{{ url('api/permit/dt_request_officer_list') }}",
                     type: 'POST',
                     data: function(d){
                         d._token = "{{ csrf_token() }}";
@@ -95,21 +95,13 @@
                                 </button>
                             `;
 
-                            if(row.status == '{{ TrxRequest::STATUS_DRAFT }}'){
+                            if(row.is_my_approval){
                                 content += `
                                     <button 
-                                        class="btn btn-sm btn-primary edit-btn" 
+                                        class="btn btn-sm btn-success approve-btn" 
                                         data-req_id="${row.req_id}"
                                     >
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
-                                    
-                                    <button 
-                                        class="btn btn-sm btn-danger delete-btn" 
-                                        data-req_id="${row.req_id}"
-                                        data-name="${row.name}"
-                                    >
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-hand-thumbs-up-fill"></i>
                                     </button>
                                 `;
                             }
@@ -128,72 +120,17 @@
                 // ]
             });
             
-            @if(is_verificator() || is_approver())
-                $('#table_permit_wrapper').on('click', '.delete-btn', function(event) {
+            @if(is_approver())
+                $('#table_permit_wrapper').on('click', '.approve-btn', function(event) {
                     event.preventDefault();
                     // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                    window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+                    window.open("{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode=1", '_blank');
                 });
             @endif
-
-            $('#table_permit_wrapper').on('click', '.verify-btn', function(event) {
-                event.preventDefault();
-                // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
-            });
 
             // $('[name="published_month"]').on('change', function(event){
             //     dt_table.ajax.reload();
             // });
         });
-
-        function deleteFile(el){
-            let doc_id = $(el).data('doc_id');
-            console.log('deleteFile - doc_id', doc_id);
-            let filename = $(el).data('filename');
-            console.log('deleteFile - filename', filename);
-
-            modalShow(
-                `Hapus ${filename} ?`,
-                `
-                    Yakin ingin hapus ${filename} ?
-                `,
-                {
-                    label: 'Ya',
-                    callback: function(){
-                        $.ajax({
-                            url: `{{ url('/api/docs/delete') }}/${doc_id}`,
-                            type: 'GET',
-                            success: function(res) {
-                                console.log('res', res);
-                                if(res.status == 0){
-                                    dt_table.ajax.reload();
-                                    modalShow(`
-                                        <span class="text-success">Delete success !!</span>
-                                    `);
-                                }else{
-                                    modalShow(
-                                        `
-                                            <span class="text-danger">
-                                                <div>${res.message}</div>
-                                            </span>
-                                        `,
-                                        `<span class="text-danger">Error</span>`
-                                    );
-                                }
-                            },
-                            error: function(xhr) {
-                                $('#status_message').html(
-                                    `<span class="text-danger">Upload failed</span><br>
-                                    <small>${xhr.responseJSON?.message || 'Server error'}</small>`
-                                );
-                            }
-                        });
-                    }
-                }
-            );
-
-            return true;
-        }
     </script>
 @endpush
