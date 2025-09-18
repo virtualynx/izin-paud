@@ -701,25 +701,18 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    if (response.status == 0) {
-                        // Show success message
-                        Modal.show(
-                            `<div class="text-center">
-                                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                                <h4 class="mt-3">Pengajuan Berhasil!</h4>
-                            </div>`,
-                            'Sukses'
+                    if (response.status == 0 || response.status == 200) {
+                        Modal.showInfo(
+                            'Pengajuan Berhasil!', 
+                            ()=>{
+                                window.location.href = "{{ url('permit/request_list') }}";
+                            },
+                            'Sukses',
+                            'success'
                         );
                     } else {
                         // Show error message
-                        Modal.show(
-                            `<div class="text-center">
-                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
-                                <h4 class="mt-3">Terjadi Kesalahan</h4>
-                                <p>${response.message}</p>
-                            </div>`,
-                            'Error'
-                        );
+                        Modal.showError(`${response.message}`);
                     }
                 },
                 error: Utils.ajaxErrorHandler,

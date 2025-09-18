@@ -22,11 +22,12 @@
         showInfo: function(
             message,
             buttonOkCallback = null,
-            title = 'Info'
+            title = 'Info',
+            bs_color = 'primary'
         ){
             window.Modal.show(
                 `<div class="text-center">
-                    <i class="bi bi-info-circle text-primary" style="font-size: 3rem;"></i>
+                    <i class="bi bi-info-circle-fill text-${bs_color}" style="font-size: 3rem;"></i>
                     <h4 class="mt-3">${title}</h4>
                     <p>${message}</p>
                 </div>`,
