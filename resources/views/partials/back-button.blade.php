@@ -1,51 +1,86 @@
 <!-- Floating Back Button -->
 <button onclick="window.history.back()" 
         class="floating-back-button"
-        aria-label="Go back to previous page">
-  ←
+        aria-label="Kembali ke halaman sebelumnya">
+  <i class="bi bi-arrow-left"></i>
 </button>
-
-{{-- <a href="javascript:history.back()" class="floating-back-button" title="Go back">
-  <i class="bi bi-arrow-left"></i> Back
-</a> --}}
 
 <style>
 .floating-back-button {
   position: fixed;
   bottom: 30px;
   left: 30px;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background-color: #4a6fa5;
+  background: linear-gradient(135deg, #3494e6, #ec6ead);
   color: white;
   border: none;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   z-index: 9999;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .floating-back-button:hover {
-  background-color: #3a5a8a;
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #2c83d6, #e55a9f);
+  transform: scale(1.05) translateY(-5px);
   opacity: 1;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.floating-back-button:active {
+  transform: scale(0.98);
 }
 
 /* Animation when page loads */
 @keyframes floatIn {
-  from { transform: translateX(-20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 0.9; }
+  from { 
+    transform: translateX(-30px) scale(0.8); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateX(0) scale(1); 
+    opacity: 0.95; 
+  }
 }
 
 .floating-back-button {
-  animation: floatIn 0.5s ease-out;
+  animation: floatIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Pulse animation to attract attention */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 148, 230, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(52, 148, 230, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 148, 230, 0); }
+}
+
+.floating-back-button {
+  animation: floatIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Add a subtle pulse effect on page load */
+.floating-back-button.pulse {
+  animation: 
+    floatIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    pulse 2s 1s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .floating-back-button {
+    bottom: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
 }
 
 /* Hide on print */
@@ -56,10 +91,18 @@
 }
 </style>
 
-<!-- Optional: Fade in/out based on scroll position -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const backButton = document.querySelector('.floating-back-button');
+  
+  // Add pulse effect class on page load
+  backButton.classList.add('pulse');
+  
+  // Remove pulse class after animation completes
+  setTimeout(() => {
+    backButton.classList.remove('pulse');
+  }, 3000);
+  
   let lastScrollPosition = 0;
   
   window.addEventListener('scroll', function() {
