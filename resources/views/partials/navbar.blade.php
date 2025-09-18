@@ -65,7 +65,7 @@
           {{-- <li class="nav-item"><a class="btn btn-danger" href="{{ url('/sso/logout') }}">Logout</a></li> --}}
         
           @php
-            $userDisplayName = userinfo()->username ?? userinfo()->email;
+            $userDisplayName = userinfo()->name ?? userinfo()->email;
 
             $maxDisplayLength = 10;
             $trimmedName = strlen($userDisplayName) > $maxDisplayLength ? substr($userDisplayName, 0, $maxDisplayLength) . '...' : $userDisplayName;

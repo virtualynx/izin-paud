@@ -40,20 +40,25 @@ class SsoController extends Controller
 
         if($resp['action'] == 'login'){
             $sso_user = $resp['data'];
-            $user = UserProfile::where('user_id', $sso_user->user_id)->first();
+            $profile = UserProfile::where('user_id', $sso_user->user_id)->first();
 
-            if(empty($user)){
-                $user = new UserProfile([
+            if(empty($profile)){
+                $profile = new UserProfile([
                     'user_id' => $sso_user->user_id,
                     'name' => $sso_user->email
                 ]);
-                $user->save();
+                $profile->save();
             }
 
-            $is_verificator = $this->userService->isVerificator($sso_user->user_id);
-            session()->put('is_verificator', $is_verificator);
-            $is_approver = $this->userService->isApprover($sso_user->user_id);
-            session()->put('is_approver', $is_approver);
+            $userinfo = userinfo();
+            $userinfo = json_decode(json_encode($userinfo), true);
+
+            $userinfo['name'] = $profile->name;
+            $userinfo['is_verificator'] = $this->userService->isVerificator($sso_user->user_id);
+            $userinfo['is_approver'] = $this->userService->isApprover($sso_user->user_id);
+
+            $userinfo = json_decode(json_encode($userinfo));
+            save_userinfo($userinfo);
 
             $redirect = '/';
 

@@ -2,12 +2,24 @@
 
 if (!function_exists('is_verificator')) {
     function is_verificator() {
-        return session()->get('is_verificator', false);
+        $userinfo = userinfo();
+
+        if(!empty($userinfo)){
+            return $userinfo->is_verificator;
+        }
+
+        return false;
     }
 }
 
 if (!function_exists('is_approver')) {
     function is_approver() {
-        return session()->get('is_approver', false);
+        $userinfo = userinfo();
+
+        if(!empty($userinfo)){
+            return $userinfo->is_approver;
+        }
+
+        return false;
     }
 }
