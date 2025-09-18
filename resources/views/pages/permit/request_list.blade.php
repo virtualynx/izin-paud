@@ -6,7 +6,7 @@
 
 @section('title', config('app.name').'- Pengajuan')
 
-@section('breadcrumbs', 'Daftar Pengajuan')
+@section('breadcrumbs', 'Daftar Pengajuan Saya')
 
 @include('imports.datatable')
 
@@ -14,8 +14,14 @@
     <div class="row">
         <div class="col">
             <div class="card card-primary card-outline">
-                <div class="card-header">
-                    {{-- <h3 class="card-title">Document List</h3> --}}
+                {{-- <div class="card-header">
+                    <h3 class="card-title">Document List</h3>
+                </div> --}}
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">Daftar Pengajuan Saya</h3>
+                    <a class="btn btn-primary ms-2" href="{{ url('/permit/request') }}">
+                        <i class="bi bi-plus-circle"></i> AJUKAN IZIN
+                    </a>
                 </div>
 
                 <div id="table_permit_wrapper" class="card-body table-responsive">
@@ -127,16 +133,20 @@
                 //     [2, 'desc']
                 // ]
             });
-            
-            @if(is_verificator() || is_approver())
-                $('#table_permit_wrapper').on('click', '.delete-btn', function(event) {
-                    event.preventDefault();
-                    // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                    window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
-                });
-            @endif
 
-            $('#table_permit_wrapper').on('click', '.verify-btn', function(event) {
+            $('#table_permit_wrapper').on('click', '.view-btn', function(event) {
+                event.preventDefault();
+                // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
+                window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+            });
+
+            $('#table_permit_wrapper').on('click', '.edit-btn', function(event) {
+                event.preventDefault();
+                // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
+                window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+            });
+            
+            $('#table_permit_wrapper').on('click', '.delete-btn', function(event) {
                 event.preventDefault();
                 // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
                 window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');

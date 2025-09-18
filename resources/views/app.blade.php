@@ -79,6 +79,8 @@
     <!-- Footer -->
     @include('partials.footer')
     
+    @include('partials.back-button')
+    
     @include('components.scripts')
 
     @stack('scripts') <!-- For JS stacks -->

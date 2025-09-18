@@ -43,7 +43,7 @@
         </li>
 
         @if(is_loggedin())
-          <li class="nav-item"><a class="nav-link" href="{{ url('/permit/request_list') }}">Pengajuan Saya</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url('/permit/request_list') }}">Pengajuan</a></li>
 
           @if(is_verificator() || is_approver())
             <li class="nav-item dropdown">
@@ -60,7 +60,7 @@
             </li>
           @endif
 
-          <li class="nav-item"><a class="btn btn-primary" href="{{ url('/permit/request') }}">AJUKAN IZIN</a></li>
+          {{-- <li class="nav-item"><a class="btn btn-primary" href="{{ url('/permit/request') }}">AJUKAN IZIN</a></li> --}}
           <li class="nav-item"><a class="btn btn-danger" href="{{ url('/sso/logout') }}">Logout</a></li>
         @else
           <li class="nav-item"><a class="btn btn-primary" href="{{ url('/sso/login') }}">Login</a></li>

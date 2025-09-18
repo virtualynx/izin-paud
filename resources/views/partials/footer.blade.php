@@ -9,6 +9,7 @@
             <h5>Kontak Kami</h5>
             <p>Senin-Jum’at 08:00 - 16:00</p>
             <p><i class="bi bi-telephone"></i> (0251) 8634644</p>
+            <p><i class="bi bi-whatsapp"></i> 0821 1211 8271</p>
             <p><i class="bi bi-envelope"></i> kecciomas@bogorkab.go.id</p>
         </div>
         <div class="col-md-4">
@@ -18,6 +19,6 @@
         </div>
         </div>
         <hr class="border-light">
-        <p class="text-center mb-0">Diskominfo Kabupaten Bogor © 2025</p>
+        <p class="text-center mb-0">Kecamatan Ciomas Kabupaten Bogor © 2025</p>
     </div>
 </footer>
