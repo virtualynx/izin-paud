@@ -97,9 +97,20 @@
                                     class="btn btn-sm btn-info view-btn" 
                                     data-req_id="${row.req_id}"
                                 >
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye"></i> Lihat
                                 </button>
                             `;
+
+                            if(row.status_text == 'Revisi'){
+                                content += `
+                                    <button 
+                                        class="btn btn-sm btn-warning revisi-btn" 
+                                        data-req_id="${row.req_id}"
+                                    >
+                                        <i class="bi bi-pencil"></i> Revisi
+                                    </button>
+                                `;
+                            }
 
                             if(row.status == '{{ TrxRequest::STATUS_DRAFT }}'){
                                 content += `
@@ -107,7 +118,7 @@
                                         class="btn btn-sm btn-primary edit-btn" 
                                         data-req_id="${row.req_id}"
                                     >
-                                        <i class="bi bi-pencil-square"></i>
+                                        <i class="bi bi-pencil-square"></i> Ubah
                                     </button>
                                     
                                     <button 
@@ -115,7 +126,7 @@
                                         data-req_id="${row.req_id}"
                                         data-name="${row.name}"
                                     >
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash"></i> Hapus
                                     </button>
                                 `;
                             }
@@ -138,6 +149,12 @@
                 event.preventDefault();
                 // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
                 window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+            });
+            
+            $('#table_permit_wrapper').on('click', '.revisi-btn', function(event) {
+                event.preventDefault();
+                let reqId = $(this).data('req_id');
+                window.location.href = "{{ url('permit/revision') }}/" + reqId;
             });
 
             $('#table_permit_wrapper').on('click', '.edit-btn', function(event) {

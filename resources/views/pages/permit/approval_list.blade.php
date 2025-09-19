@@ -91,17 +91,17 @@
                                     class="btn btn-sm btn-info view-btn" 
                                     data-req_id="${row.req_id}"
                                 >
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye"></i> Lihat
                                 </button>
                             `;
 
-                            if(row.is_my_approval){
+                            if(row.status == '{{ TrxRequest::STATUS_VERIFIED }}' && row.is_my_approval){
                                 content += `
                                     <button 
                                         class="btn btn-sm btn-success approve-btn" 
                                         data-req_id="${row.req_id}"
                                     >
-                                        <i class="bi bi-hand-thumbs-up-fill"></i>
+                                        <i class="bi bi-hand-thumbs-up-fill"></i> Setujui
                                     </button>
                                 `;
                             }
@@ -123,8 +123,8 @@
             @if(is_approver())
                 $('#table_permit_wrapper').on('click', '.approve-btn', function(event) {
                     event.preventDefault();
-                    // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                    window.open("{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode=1", '_blank');
+                    // window.open("{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode=1", '_blank');
+                    window.location.href = "{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode=1";
                 });
             @endif
 

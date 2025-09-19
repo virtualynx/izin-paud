@@ -188,7 +188,8 @@ class PermitApi extends Controller
                 'name' => $row->name,
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
                 'status' => $row->status,
-                'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
+                'status_text' => $row->approval_status,
+                // 'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
             ];
         }
@@ -218,7 +219,6 @@ class PermitApi extends Controller
 
         $user = userinfo();
         $mainPosition = $userService->getMainPosition($user->user_id);
-
         $req_approval_map = $permitService->getRequestApprovalMap($req_ids);
 
         $data = [];
@@ -233,7 +233,8 @@ class PermitApi extends Controller
                 'name' => $row->name,
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
                 'status' => $row->status,
-                'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
+                'status_text' => $row->approval_status,
+                // 'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
                 'is_my_approval' => $isMyAppoval
             ];
@@ -397,24 +398,25 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
-    public function request_update(PositionService $positionService){
+    public function request_update(PermitService $permitService){
         $params = request()->all();
 
         $response = new ApiResponse();
         try {
-            $req = TrxRequest::where('req_id', $params['req_id'])->first();
-
             if($params['status'] == TrxRequest::STATUS_VERIFIED){
-                $userinfo = userinfo(); 
-
-                $approvalSeq = $positionService->getPositionSequence(true);
-
-                $a=1;
+                $req = TrxRequest::where('req_id', $params['req_id'])->first();
+                $req->status = $params['status'];
+                $req->save();
+            }else if(in_array($params['status'], [
+                TrxRequestApproval::STATUS_APPROVED,
+                TrxRequestApproval::STATUS_REVISION,
+                TrxRequestApproval::STATUS_REJECTED
+            ])){
+                $userinfo = userinfo();
+                $permitService->updateRequestApproval($params['req_id'], $userinfo->user_id, $params['status']);
+            }else{
+                throw new \Exception("Unknown param status: ".$params['status'], 1);
             }
-
-            $req->status = $params['status'];
-
-            $req->save();
         } catch (\Exception $e) {
             $response->status = $e->getCode();
             $response->message = $e->getMessage();

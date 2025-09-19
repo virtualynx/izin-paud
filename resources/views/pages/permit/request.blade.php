@@ -702,14 +702,9 @@
                 },
                 success: function(response) {
                     if (response.status == 0 || response.status == 200) {
-                        Modal.showInfo(
-                            'Pengajuan Berhasil!', 
-                            ()=>{
-                                window.location.href = "{{ url('permit/request_list') }}";
-                            },
-                            'Sukses',
-                            'success'
-                        );
+                        Modal.showSuccess('Pengajuan Berhasil!', () => {
+                            window.location.href = "{{ url('permit/request_list') }}";
+                        });
                     } else {
                         // Show error message
                         Modal.showError(`${response.message}`);

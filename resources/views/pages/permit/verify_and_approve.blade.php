@@ -1,3 +1,8 @@
+@php
+    use App\Models\TrxRequest;
+    use App\Models\TrxRequestApproval;
+@endphp
+
 @extends('app')
 
 @php
@@ -184,7 +189,7 @@
                     </div>
 
                     <!-- Catatan Revisi Pemeriksa -->
-                    <div class="row mt-4">
+                    {{-- <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="card">
                                 <div class="card-header bg-light">
@@ -206,7 +211,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <!-- Button Process -->
                     <div class="row mt-4">
@@ -472,46 +477,6 @@
             Utils.showBsModal('#modal_revision_notes');
         }
 
-        function renderButtonProcess(){
-            let allVerified = true;
-            let hasRevision = false;
-
-            // Check each document status
-            $('.verify-status').each(function() {
-                const status = $(this).text().trim();
-                if (status !== 'verified') {
-                    allVerified = false;
-                    if (status === 'revision') {
-                        hasRevision = true;
-                    }
-                }
-            });
-            
-            // Update status badge in header
-            let overallStatus = 'pending';
-            let overallBadgeClass = 'bg-secondary';
-            
-            if (allVerified) {
-                overallStatus = 'verified';
-                overallBadgeClass = 'bg-success';
-            } else if (hasRevision) {
-                overallStatus = 'revision needed';
-                overallBadgeClass = 'bg-warning';
-            }
-            
-            $('#statusBadge')
-                .text(overallStatus)
-                .removeClass('bg-success bg-warning bg-secondary bg-info')
-                .addClass(overallBadgeClass);
-            
-            // Enable/disable the verify button based on the status
-            if (allVerified) {
-                $('#process-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
-            } else {
-                $('#process-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
-            }
-        }
-
         $('#modal_revision_notes').find('form').on('submit', function(e) {
             e.preventDefault();
 
@@ -587,7 +552,7 @@
                                         modalRevNotes.find('form')[0].reset();
                                         modalRevNotes.find('[name="rev_note_id"]').val('');
                                         $('#responseMessage').addClass('d-none');
-                                    }, 1500);
+                                    }, 750);
                                 } else {
                                     // Show error message for status update
                                     responseMessage
@@ -682,6 +647,46 @@
             });
         });
 
+        function renderButtonProcess(){
+            let allVerified = true;
+            let hasRevision = false;
+
+            // Check each document status
+            $('.verify-status').each(function() {
+                const status = $(this).text().trim();
+                if (status !== 'verified') {
+                    allVerified = false;
+                    if (status === 'revision') {
+                        hasRevision = true;
+                    }
+                }
+            });
+            
+            // Update status badge in header
+            let overallStatus = 'pending';
+            let overallBadgeClass = 'bg-secondary';
+            
+            if (allVerified) {
+                overallStatus = 'verified';
+                overallBadgeClass = 'bg-success';
+            } else if (hasRevision) {
+                overallStatus = 'revision needed';
+                overallBadgeClass = 'bg-warning';
+            }
+            
+            $('#statusBadge')
+                .text(overallStatus)
+                .removeClass('bg-success bg-warning bg-secondary bg-info')
+                .addClass(overallBadgeClass);
+            
+            // Enable/disable the verify button based on the status
+            if (allVerified) {
+                $('#process-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
+            } else {
+                $('#process-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
+            }
+        }
+
         $(document).on('click', '#process-btn', function(e) {
             // Hide any previous response messages
             $('#responseMessage').addClass('d-none');
@@ -697,18 +702,20 @@
                 type: 'POST',
                 data: {
                     req_id: '{{ $request->req_id }}',
-                    status: 'verified'
+                    status: '{{ $mode==1? TrxRequestApproval::STATUS_APPROVED : TrxRequest::STATUS_VERIFIED }}'
                 },
                 dataType: 'json',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    const responseMessage = $('#responseMessage');
+                    const successMessage = '{{ $mode==1? "Approval Berhasil" : "Verifikasi Selesai" }}';
+                    const redirectUrl = '{{ url( "permit/".($mode==1? "approval_list": "verify_list") ) }}';
 
                     if (response.status == 0) {
-                        Modal.showInfo('Proses lanjutan berhasil ...', ()=>{
-                            window.location = '{{ url("permit/verify_list") }}';
+                        Modal.showSuccess(successMessage, ()=>{
+                            // window.location.replace = redirectUrl;
+                            window.location.replace(redirectUrl)
                         });
                     } else {
                         // Show error message

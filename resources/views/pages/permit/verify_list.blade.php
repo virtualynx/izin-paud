@@ -91,18 +91,18 @@
                                     class="btn btn-sm btn-info view-btn" 
                                     data-req_id="${row.req_id}"
                                 >
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye"></i> Lihat
                                 </button>
                             `;
 
-                            @if(is_verificator())
+                            @if(is_verificator() || is_approver())
                                 if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
                                     content += `
                                         <button 
                                             class="btn btn-sm btn-warning verify-btn" 
                                             data-req_id="${row.req_id}"
                                         >
-                                            <i class="bi bi-zoom-in"></i>
+                                            <i class="bi bi-zoom-in"></i> Verifikasi
                                         </button>
                                     `;
                                 }
@@ -122,11 +122,11 @@
                 // ]
             });
             
-            @if(is_verificator())
+            @if(is_verificator() || is_approver())
                 $('#table_permit_wrapper').on('click', '.verify-btn', function(event) {
                     event.preventDefault();
-                    // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                    window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+                    // window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+                    window.location.href = "{{ url('permit/verify') }}/"+$(this).data('req_id');
                 });
             @endif
 

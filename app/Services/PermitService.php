@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\Storage;
 
 class PermitService
 {
-    public function __construct()
+    private UserService $userService;
+
+    public function __construct(UserService $userService)
     {
-        
+        $this->userService = $userService;
     }
 
     public function listRequestForUser()
@@ -116,6 +118,23 @@ class PermitService
         return $req_currentapproval_map;
     }
 
+    public function updateRequestApproval($req_id, $user_id, $status){
+        $mainPosition = $this->userService->getMainPosition($user_id);
+        $req_approval_map = $this->getRequestApprovalMap([$req_id]);
+        $approval = $req_approval_map[$req_id];
+
+        if(empty($approval)){
+            throw new \Exception("Request with id: $req_id is already fully-approved", 1);
+        }
+
+        if($approval->approver_position_id != $mainPosition->position_id){
+            throw new \Exception("The main-position of the user does not have privilege to sign current approval", 1);
+        }
+
+        $approval->approval_status = $status;
+        $approval->save();
+    }
+
     private function _listRequestSelectQuery(){
         $query = TrxRequest::query()
             ->select("*")
@@ -151,16 +170,15 @@ class PermitService
                     WHEN trx_request.status = 'submitted' THEN 
                         'Menunggu Verifikasi'
 
-                    -- If status is 'verified' and no approval_status is filled
+                    -- If status is 'verified' and any of approval_status is null
                     WHEN 
                         trx_request.status = 'verified' 
-                        AND NOT EXISTS (
-                            SELECT 1 
-                            FROM trx_request_approval 
+                        AND EXISTS (
+                            SELECT 1 FROM trx_request_approval 
                             WHERE 
                                 trx_request_approval.req_id = trx_request.req_id 
-                                AND trx_request_approval.approval_status IS NOT NULL
-                        )
+                                AND trx_request_approval.approval_status IS NULL 
+                        ) 
                     THEN 
                         CONCAT(
                             'Menunggu Disetujui ', 
@@ -169,7 +187,9 @@ class PermitService
                                 FROM 
                                     trx_request_approval tra
                                     JOIN position p ON tra.approver_position_id = p.position_id
-                                WHERE tra.req_id = trx_request.req_id
+                                WHERE 
+                                    tra.req_id = trx_request.req_id
+                                    AND tra.approval_status IS NULL
                                 ORDER BY tra.level DESC 
                                 LIMIT 1
                             )

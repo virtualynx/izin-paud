@@ -22,13 +22,31 @@
         showInfo: function(
             message,
             buttonOkCallback = null,
-            title = 'Info',
-            bs_color = 'primary'
+            title = 'Info'
         ){
             window.Modal.show(
                 `<div class="text-center">
-                    <i class="bi bi-info-circle-fill text-${bs_color}" style="font-size: 3rem;"></i>
+                    <i class="bi bi-info-circle-fill text-primary" style="font-size: 3rem;"></i>
                     <h4 class="mt-3">${title}</h4>
+                    <p>${message}</p>
+                </div>`,
+                title,
+                {
+                    label: 'Ok', 
+                    callback: buttonOkCallback || function() {} // Can be null or empty
+                },
+                false
+            );
+        },
+        showSuccess: function(
+            message,
+            buttonOkCallback = null,
+            title = 'Sukses'
+        ){
+            window.Modal.show(
+                `<div class="text-center">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Sukses</h4>
                     <p>${message}</p>
                 </div>`,
                 title,

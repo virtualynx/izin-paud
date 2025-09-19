@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Masters\DoctypeRequirement;
 use App\Models\TrxRequest;
 use App\Models\TrxRequestDocument;
 use App\Services\PermitService;
@@ -81,11 +82,37 @@ class PermitController extends Controller
 
         $documents = json_decode(json_encode($documents));
 
-        return view('pages.permit.verify_approve', [
+        return view('pages.permit.verify_and_approve', [
             'request' => $request,
             'documents' => $documents,
-            'is_approver' => $is_approver
+            'is_approver' => $is_approver,
+            'mode' => $params['mode']?? 0
         ]);
+    }
+
+    public function page_revision($req_id){
+        // Get the request data with related documents
+        $request_data = TrxRequest::with(['documents.doctype', 'revision_notes'])
+            ->findOrFail($req_id);
+        
+        // Get all document requirements
+        $documents = DoctypeRequirement::where('is_active', 1)
+            ->orderBy('order_num')
+            ->get();
+        
+        // Organize uploaded files by doctypereq_id
+        $uploaded_files = [];
+        foreach ($request_data->documents as $document) {
+            $uploaded_files[$document->doctypereq_id][] = (object)[
+                'file_id' => $document->req_doc_id,
+                'filename' => basename($document->file_path),
+                'filepath' => $document->file_path,
+                'verify_status' => $document->verify_status,
+                'revision_notes' => $document->revision_notes->pluck('notes')->toArray()
+            ];
+        }
+        
+        return view('permit.revision', compact('request_data', 'documents', 'uploaded_files'));
     }
 
     public function document_preview($req_doc_id){
