@@ -1,5 +1,6 @@
 @php
     use App\Models\TrxRequest;
+    use App\Services\PermitService;
 @endphp
 
 @extends('app')
@@ -85,7 +86,7 @@
                         searchable: false,
                         render: function(data, type, row) {
                             let content = '';
-                            
+
                             content += `
                                 <button 
                                     class="btn btn-sm btn-info view-btn" 
@@ -96,6 +97,16 @@
                             `;
 
                             @if(is_verificator() || is_approver())
+                                if(row.status_text == '{{ PermitService::STATUS_TEXT_REVISION }}'){
+                                    content += `
+                                        <button 
+                                            class="btn btn-sm btn-warning revisi-btn" 
+                                            data-req_id="${row.req_id}"
+                                        >
+                                            <i class="bi bi-pencil"></i> Revisi
+                                        </button>
+                                    `;
+                                }
                                 if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
                                     content += `
                                         <button 
