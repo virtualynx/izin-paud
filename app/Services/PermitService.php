@@ -87,6 +87,27 @@ class PermitService
         return $results;
     }
 
+    public function resetApproval($req_id){
+        DB::beginTransaction();
+        try{
+            $approval_rs = TrxRequestApproval::query()
+                ->where('is_disabled', 0)
+                ->where('req_id', $req_id)
+                ->get()
+                ;
+
+            foreach($approval_rs as $row){
+                $row->approval_status = null;
+                $row->save();
+            }
+
+            DB::commit();
+        }catch(\Exception $e){
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
     public function getRequestApprovalMap(array $req_ids){
         $approval_rs = TrxRequestApproval::query()
             ->where('is_disabled', 0)

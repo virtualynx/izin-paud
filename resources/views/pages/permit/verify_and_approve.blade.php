@@ -1,5 +1,6 @@
 @php
     use App\Models\TrxRequest;
+    use App\Models\TrxRequestDocument;
     use App\Models\TrxRequestApproval;
 @endphp
 
@@ -338,22 +339,26 @@
                             let badgeClass = 'bg-secondary';
                             let statusText = 'pending';
                             
-                            switch(status) {
-                                case 'verified':
-                                    badgeClass = 'bg-success';
-                                    statusText = 'verified';
-                                    break;
-                                case 'revision':
-                                    badgeClass = 'bg-warning';
-                                    statusText = 'revision';
-                                    break;
+                            if(status == 'verified'){
+                                badgeClass = 'bg-success';
+                                statusText = 'verified';
                             }
+
+                            // switch(status) {
+                            //     case 'verified':
+                            //         badgeClass = 'bg-success';
+                            //         statusText = 'verified';
+                            //         break;
+                            //     case 'revision':
+                            //         badgeClass = 'bg-warning';
+                            //         statusText = 'revision';
+                            //         break;
+                            // }
                             
                             $statusBadge.text(statusText);
                             $badgeContainer.removeClass('bg-info bg-success bg-warning bg-secondary').addClass(badgeClass);
                             
-                            // Success callback
-                            if(response.message == 'notes updated'){
+                            if(status == 'verified' || status == 'revision'){
                                 renderRevisionNotes();
                             }
                             renderButtonProcess();
@@ -389,15 +394,27 @@
             renderButtonProcess();
         });
 
-        function getStatusBadgeClass(status) {
-            switch(status) {
-                case 'valid': return 'bg-success';
-                case 'invalid': return 'bg-danger';
-                default: return 'bg-warning';
-            }
-        }
+        // function getStatusBadgeClass(status) {
+        //     switch(status) {
+        //         case 'valid': return 'bg-success';
+        //         case 'invalid': return 'bg-danger';
+        //         default: return 'bg-warning';
+        //     }
+        // }
 
         function renderRevisionNotes(){
+            const tbody = $('#table_revnotes').find('tbody');
+            tbody.html(`
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">Memuat catatan revisi...</span>
+                    </td>
+                </tr>
+            `);
+
             $.ajax({
                 url: '{{ url("api/permit/revision_notes/list")."/".$request->req_id }}',
                 type: 'GET',
@@ -407,7 +424,6 @@
                 },
                 success: function(response) {
                     if (response.status == 0) {
-                        const tbody = $('#table_revnotes').find('tbody');
                         tbody.empty();
 
                         const temp_arr = [];
@@ -443,7 +459,18 @@
                                 </tr>
                             `);
                         });
+
+                        if(temp_arr.length == 0){
+                            tbody.append(`
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <span class="">Tidak ada data ...</span>
+                                    </td>
+                                </tr>
+                            `);
+                        }
                     } else {
+                        tbody.empty();
                         // Show error message
                         Modal.show(
                             `<div class="text-center">
@@ -543,6 +570,11 @@
                                     
                                     renderRevisionNotes();
                                     renderButtonProcess();
+
+                                    // if adding revision on approval page even once, removes the process button
+                                    @if($mode==1)
+                                        $('#process-btn').hide();
+                                    @endif
                                     
                                     // Close the modal after a brief delay
                                     setTimeout(function() {
@@ -552,7 +584,7 @@
                                         modalRevNotes.find('form')[0].reset();
                                         modalRevNotes.find('[name="rev_note_id"]').val('');
                                         $('#responseMessage').addClass('d-none');
-                                    }, 750);
+                                    }, 500);
                                 } else {
                                     // Show error message for status update
                                     responseMessage

@@ -308,10 +308,12 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
-    public function revision_notes_update(){
+    public function revision_notes_update(PermitService $permitService){
         $params = request()->all();
 
         $response = new ApiResponse();
+
+        DB::beginTransaction();
         try {
             $note = null;
 
@@ -329,6 +331,7 @@ class PermitApi extends Controller
                     ]);
                 }
             }else{
+                // edit existing revision-note
                 if(!empty($params['rev_note_id'])){
                     $note = TrxRevisionNotes::query()
                         ->where('is_disabled', 0)
@@ -336,6 +339,7 @@ class PermitApi extends Controller
                         ->first();
                 }
 
+                // create new revision-note
                 if(empty($note)){
                     $note = new TrxRevisionNotes([
                         'req_id' => $params['req_id'],
@@ -352,7 +356,20 @@ class PermitApi extends Controller
             }
 
             $note->save();
+
+            $req = TrxRequest::query()
+                ->where('req_id', $params['req_id'])
+                ->first();
+
+            if($req->status == TrxRequest::STATUS_VERIFIED){
+                $req->status = TrxRequest::STATUS_SUBMITTED;
+                $permitService->resetApproval($params['req_id']);
+            }
+            $req->save();
+
+            DB::commit();
         } catch (\Exception $e) {
+            DB::rollBack();
             $response->status = $e->getCode();
             $response->message = $e->getMessage();
         }
@@ -369,9 +386,6 @@ class PermitApi extends Controller
 
             if(!empty($params['verify_status'])){
                 $verify_status = $params['verify_status'];
-                if($doc->verify_status != $verify_status){
-                    $doc->verify_status = $verify_status;
-                }
 
                 if($verify_status == TrxRequestDocument::STATUS_VERIFIED){
                     $notes = TrxRevisionNotes::query()
@@ -384,12 +398,15 @@ class PermitApi extends Controller
                             $row->is_resolved = 1;
                             $row->save();
                         }
-                        $response->message = 'notes updated';
                     }
                 }
-            }
 
-            $doc->save();
+                if($doc->verify_status != $verify_status){
+                    $doc->verify_status = $verify_status;
+                }
+
+                $doc->save();
+            }
         } catch (\Exception $e) {
             $response->status = $e->getCode();
             $response->message = $e->getMessage();
