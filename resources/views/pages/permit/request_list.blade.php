@@ -70,13 +70,13 @@
                         d._token = "{{ csrf_token() }}";
                     },
                     beforeSend: () => {
-                        Loading.show('Memuat data permohonan...');
+                        Loading.tableLoading($('#table_permit tbody'), 4, 'Memuat data ...');
                     },
                     complete: function() {
-                        Loading.hide();
                     },
                     error: function(xhr, error, thrown) {
-                        Loading.hide();
+                        console.log(error);
+                        Loading.tableError($('#table_permit tbody'), 4, 'Gagal memuat data');
                         Modal.showError('Gagal memuat data. Silakan coba lagi.');
                     }
                 },
@@ -151,7 +151,7 @@
                 // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
                 window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
             });
-            
+
             $('#table_permit_wrapper').on('click', '.revisi-btn', function(event) {
                 event.preventDefault();
                 let reqId = $(this).data('req_id');

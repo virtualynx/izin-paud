@@ -292,6 +292,9 @@
         const modalRevNotes = $('#modal_revision_notes');
 
         $(document).ready(function() {
+            renderRevisionNotes();
+            renderProcessButton();
+
             // Update the doc-status change event handler
             $('.doc-status').on('change', function(e){
                 const $dropdown = $(this);
@@ -361,7 +364,7 @@
                             if(status == 'verified' || status == 'revision'){
                                 renderRevisionNotes();
                             }
-                            renderButtonProcess();
+                            renderProcessButton();
                         } else {
                             // Error callback
                             // Revert dropdown on error
@@ -372,7 +375,7 @@
                                 `<div class="text-center">
                                     <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
                                     <h4 class="mt-3">Terjadi Kesalahan</h4>
-                                    <p>${errorResponse.message}</p>
+                                    <p>${response.message}</p>
                                 </div>`,
                                 'Error'
                             );
@@ -389,31 +392,10 @@
                     }
                 });
             });
-
-            renderRevisionNotes();
-            renderButtonProcess();
         });
-
-        // function getStatusBadgeClass(status) {
-        //     switch(status) {
-        //         case 'valid': return 'bg-success';
-        //         case 'invalid': return 'bg-danger';
-        //         default: return 'bg-warning';
-        //     }
-        // }
 
         function renderRevisionNotes(){
             const tbody = $('#table_revnotes').find('tbody');
-            tbody.html(`
-                <tr>
-                    <td colspan="4" class="text-center py-4">
-                        <div class="spinner-border spinner-border-sm" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span class="ms-2">Memuat catatan revisi...</span>
-                    </td>
-                </tr>
-            `);
 
             $.ajax({
                 url: '{{ url("api/permit/revision_notes/list")."/".$request->req_id }}',
@@ -468,19 +450,24 @@
                                     </td>
                                 </tr>
                             `);
+                            Loading.tableEmpty(tbody, 4, 'Tidak ada data');
                         }
                     } else {
                         tbody.empty();
                         // Show error message
-                        Modal.show(
-                            `<div class="text-center">
-                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
-                                <h4 class="mt-3">Terjadi Kesalahan</h4>
-                                <p>${response.message}</p>
-                            </div>`,
-                            'Error'
-                        );
+                        Loading.tableError(tbody, 4, response.message);
+                        // Modal.show(
+                        //     `<div class="text-center">
+                        //         <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                        //         <h4 class="mt-3">Terjadi Kesalahan</h4>
+                        //         <p>${response.message}</p>
+                        //     </div>`,
+                        //     'Error'
+                        // );
                     }
+                },
+                beforeSend: () => {
+                    Loading.tableLoading(tbody, 4, 'Memuat catatan revisi');
                 },
                 error: Utils.ajaxErrorHandler,
                 complete: function() {
@@ -569,7 +556,7 @@
                                     $dropdown.data('previous-value', 'revision');
                                     
                                     renderRevisionNotes();
-                                    renderButtonProcess();
+                                    renderProcessButton();
 
                                     // if adding revision on approval page even once, removes the process button
                                     @if($mode==1)
@@ -679,7 +666,7 @@
             });
         });
 
-        function renderButtonProcess(){
+        function renderProcessButton(){
             let allVerified = true;
             let hasRevision = false;
 

@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Storage;
 class PermitService
 {
     public const STATUS_TEXT_REVISION = 'Revisi';
-    public const STATUS_TEXT_VERIFICATION = 'Verifikasi';
+    public const STATUS_TEXT_VERIFICATION_WAITING = 'Belum Diverifikasi';
+    public const STATUS_TEXT_VERIFICATION = 'Sedang Diverifikasi';
     public const STATUS_TEXT_PUBLISHING = 'Menunggu penerbitan Izin';
     public const STATUS_TEXT_PUBLISHED = 'Izin terbit';
 
@@ -194,7 +195,7 @@ class PermitService
                     
                     -- If status is 'submitted'
                     WHEN trx_request.status = 'submitted' THEN 
-                        'Menunggu Verifikasi'
+                        '".self::STATUS_TEXT_VERIFICATION_WAITING."'
 
                     -- If status is 'verified' and any of approval_status is null
                     WHEN 

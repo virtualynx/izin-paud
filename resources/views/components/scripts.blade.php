@@ -85,6 +85,36 @@
             $('#globalLoadingOverlay').addClass('d-none');
             // Re-enable body scrolling
             $('body').css('overflow', 'auto');
+        },
+        tableLoading: function(jquery_tbody, colspan, loading_text){
+            jquery_tbody.html(`
+                <tr>
+                    <td colspan="${colspan}" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">${loading_text}</span>
+                    </td>
+                </tr>
+            `);
+        },
+        tableEmpty: function(jquery_tbody, colspan){
+            jquery_tbody.html(`
+                <tr>
+                    <td colspan="${colspan}" class="text-center py-4">
+                        <span class="">Tidak ada data ...</span>
+                    </td>
+                </tr>
+            `);
+        },
+        tableError: function(jquery_tbody, colspan, error_text){
+            jquery_tbody.html(`
+                <tr>
+                    <td colspan="${colspan}" class="text-center py-4">
+                        <span class="text-danger">${error_text}</span>
+                    </td>
+                </tr>
+            `);
         }
     };
 </script>
