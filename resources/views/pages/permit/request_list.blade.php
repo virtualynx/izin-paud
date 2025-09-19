@@ -1,5 +1,6 @@
 @php
     use App\Models\TrxRequest;
+    use App\Services\PermitService;
 @endphp
 
 @extends('app')
@@ -101,7 +102,7 @@
                                 </button>
                             `;
 
-                            if(row.status_text == 'Revisi'){
+                            if(row.status_text == '{{ PermitService::STATUS_TEXT_REVISION }}'){
                                 content += `
                                     <button 
                                         class="btn btn-sm btn-warning revisi-btn" 

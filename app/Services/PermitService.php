@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Storage;
 
 class PermitService
 {
+    public const STATUS_TEXT_REVISION = 'Revisi';
+    public const STATUS_TEXT_VERIFICATION = 'Verifikasi';
+    public const STATUS_TEXT_PUBLISHING = 'Menunggu penerbitan Izin';
+    public const STATUS_TEXT_PUBLISHED = 'Izin terbit';
+
     private UserService $userService;
 
     public function __construct(UserService $userService)
@@ -151,7 +156,7 @@ class PermitService
                                 AND trx_request_document.verify_status = '".TrxRequestDocument::STATUS_REVISION."'
                         )
                     THEN 
-                        'Revisi'
+                        '".self::STATUS_TEXT_REVISION."'
                     
                     -- status process
                     WHEN 
@@ -164,7 +169,7 @@ class PermitService
                                 AND trx_request_document.verify_status <> '".TrxRequestDocument::STATUS_PENDING."'
                         )
                     THEN 
-                        'Verifikasi'
+                        '".self::STATUS_TEXT_VERIFICATION."'
                     
                     -- If status is 'submitted'
                     WHEN trx_request.status = 'submitted' THEN 
@@ -207,7 +212,7 @@ class PermitService
                             )
                         ) 
                     THEN 
-                        'Menunggu penerbitan Izin'
+                        '".self::STATUS_TEXT_PUBLISHING."'
                     
                     -- Default case for other scenarios
                     ELSE 'Dalam Proses'
