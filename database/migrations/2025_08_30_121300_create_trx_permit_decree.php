@@ -18,8 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->boolean('is_disabled')->default('0');
             
-            $table->uuid('req_id')->nullable(); //to allow manual upload of already-existing decree
-            $table->string('decree_num', 50)->unique();
+            $table->uuid('req_id');
+            $table->string('decree_num', 50);
             $table->enum('decree_type', ['NEW', 'EXTENSION', 'REVISION'])->default('NEW');
 
             $table->date('issued_date');

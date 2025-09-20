@@ -139,7 +139,8 @@
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
 
             // Handle Preview Button Clicks
-            $('#table_documents').on('click', '.preview-pdf', function() {
+            // $('#table_documents').on('click', '.preview-pdf', function() {
+            $(document).on('click', '.preview-pdf', function() {
                 const fileUrl = $(this).data('url');
                 const mime = $(this).data('mime');
                 const filename = $(this).data('filename');

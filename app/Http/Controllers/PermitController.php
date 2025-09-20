@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Masters\DoctypeRequirement;
+use App\Models\TrxPermitDecree;
 use App\Models\TrxRequest;
 use App\Models\TrxRequestDocument;
 use App\Services\PermitService;
@@ -37,8 +38,8 @@ class PermitController extends Controller
         return view('pages.permit.approval_list');
     }
 
-    public function publish_list(){
-        return view('pages.permit.publish_list');
+    public function decree_list(){
+        return view('pages.permit.decree_list');
     }
 
     public function page_verify($req_id, UserService $userService, PermitService $permitService){
@@ -191,8 +192,59 @@ class PermitController extends Controller
             ? 'attachment; filename="' . $filename . '"' // Force download
             : 'inline; filename="' . $filename . '"';    // Preview in browser
 
+        // $headers = [
+        //     'Content-Type' => Storage::disk()->mimeType($req_doc->file_path),
+        //     'Content-Disposition' => $contentDisposition,
+        //     'Cache-Control' => 'public, max-age=31536000', // 1 year
+        //     'Expires' => gmdate('D, d M Y H:i:s \G\M\T', time() + 31536000),
+        //     'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
+        //     'ETag' => $etag,
+        // ];
+
         $headers = [
             'Content-Type' => Storage::disk()->mimeType($req_doc->file_path),
+            'Content-Disposition' => $contentDisposition,
+            'Cache-Control' => 'must-revalidate', // Force revalidation with ETag
+            'ETag' => $etag,
+            'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
+        ];
+
+        return Storage::disk()->response($req_doc->file_path, null, $headers);
+    }
+
+    public function decree_preview($permit_decree_id){
+        $params = request()->all();
+
+        $user = userinfo();
+
+        $decree = TrxPermitDecree::query()
+            ->where('is_disabled', 0)
+            ->where('permit_decree_id', $permit_decree_id)
+            ->first();
+
+        $path_arr = explode("/", $decree->file_path);
+        $filename = $path_arr[count($path_arr)-1];
+
+        $filePath = Storage::disk()->path($decree->file_path);
+        $lastModified = filemtime($filePath);
+        $etag = md5_file($filePath);
+
+        // Check if client has cached version
+        $ifModifiedSince = request()->header('If-Modified-Since');
+        $ifNoneMatch = request()->header('If-None-Match');
+        
+        if (($ifModifiedSince && strtotime($ifModifiedSince) === $lastModified) || 
+            ($ifNoneMatch && $ifNoneMatch === $etag)) {
+            return response()->json(null, 304); // Not Modified
+        }
+
+        // Tentukan Content-Disposition berdasarkan action
+        $contentDisposition = !empty($params['action']) && $params['action'] == 'download' 
+            ? 'attachment; filename="' . $filename . '"' // Force download
+            : 'inline; filename="' . $filename . '"';    // Preview in browser
+
+        $headers = [
+            'Content-Type' => Storage::disk()->mimeType($decree->file_path),
             'Content-Disposition' => $contentDisposition,
             'Cache-Control' => 'public, max-age=31536000', // 1 year
             'Expires' => gmdate('D, d M Y H:i:s \G\M\T', time() + 31536000),
@@ -200,6 +252,6 @@ class PermitController extends Controller
             'ETag' => $etag,
         ];
 
-        return Storage::disk()->response($req_doc->file_path, null, $headers);
+        return Storage::disk()->response($decree->file_path, null, $headers);
     }
 }

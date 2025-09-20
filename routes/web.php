@@ -20,12 +20,16 @@ Route::middleware(['sso_login'])->group(function () {
         Route::get('/request_list', [PermitController::class, 'request_list']);
         Route::get('/verify_list', [PermitController::class, 'verify_list']);
         Route::get('/approval_list', [PermitController::class, 'approval_list']);
-        Route::get('/publish_list', [PermitController::class, 'publish_list']);
+        Route::get('/decree_list', [PermitController::class, 'decree_list']);
         
         Route::get('/verify/{req_id}', [PermitController::class, 'page_verify']);
         Route::get('/revision/{req_id}', [PermitController::class, 'page_revision']);
+        
         Route::prefix('document')->group(function () {
             Route::get('/preview/{req_doc_id}', [PermitController::class, 'document_preview']);
+        });
+        Route::prefix('decree')->group(function () {
+            Route::get('/preview/{permit_decree_id}', [PermitController::class, 'decree_preview']);
         });
     });
 });

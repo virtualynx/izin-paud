@@ -4,6 +4,7 @@ namespace App\Http\Api;
 
 use App\Dto\ApiResponse;
 use App\Models\Masters\DoctypeRequirement;
+use App\Models\TrxPermitDecree;
 use App\Models\TrxRequest;
 use App\Models\TrxRequestApproval;
 use App\Models\TrxRequestDocument;
@@ -228,6 +229,19 @@ class PermitApi extends Controller
 
             $isMyAppoval = !empty($approval) && $approval->approver_position_id == $mainPosition->position_id? true: false;
             
+            $decree_fileinfo = null;
+            if(!empty($row->decree)){
+                $decree_fileinfo = [
+                    'permit_decree_id' => $row->decree->permit_decree_id
+                ];
+
+                $path_arr = explode("/", $row->decree->file_path);
+                $filename = $path_arr[count($path_arr)-1];
+                $decree_fileinfo['filename'] = $filename;
+
+                $decree_fileinfo['mime'] = Storage::disk()->mimeType($row->decree->file_path);
+            }
+
             $data[] = [
                 'req_id' => $row->req_id,
                 'reg_num' => $row->reg_num,
@@ -235,55 +249,9 @@ class PermitApi extends Controller
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
                 'status' => $row->status,
                 'status_text' => $row->approval_status,
+                'decree' => $decree_fileinfo,
                 // 'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
-                'actions' => null, // Will be filled by JS
-                'is_my_approval' => $isMyAppoval
-            ];
-        }
-        
-        $totalRecords = $filteredRecords = count($rs);
-
-        return response()->json([
-            'draw' => $params['draw'],
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $filteredRecords,
-            'data' => $data
-        ]);
-    }
-
-    public function dt_permitpublish_list(PermitService $permitService, UserService $userService){
-        $params = request()->all();
-
-        $rs = $permitService->listRequestForOfficer();
-        // $rs = TrxRequest::query()
-        //     ->where('is_disabled', 0)
-        //     ->where('status', TrxRequest::STATUS_SUBMITTED)
-        //     ->orderBy('created_at', 'asc')
-        //     ->get();
-
-        $req_ids = [];
-        foreach ($rs as $row) {
-            $req_ids []= $row->req_id;
-        }
-
-        $user = userinfo();
-        $mainPosition = $userService->getMainPosition($user->user_id);
-        $req_approval_map = $permitService->getRequestApprovalMap($req_ids);
-
-        $data = [];
-        foreach ($rs as $row) {
-            $approval = $req_approval_map[$row->req_id];
-
-            $isMyAppoval = !empty($approval) && $approval->approver_position_id == $mainPosition->position_id? true: false;
-            
-            $data[] = [
-                'req_id' => $row->req_id,
-                'reg_num' => $row->reg_num,
-                'name' => $row->name,
-                'request_date' => $row->created_at->format('d-m-Y H:i'),
-                'status' => $row->status,
                 'status_text' => $row->approval_status,
-                // 'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
                 'is_my_approval' => $isMyAppoval
             ];
@@ -490,12 +458,6 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
-    // public function reqdoc_info(){
-    //     $params = request()->all();
-
-    //     return response()->json($response);
-    // }
-
     public function request_update(PermitService $permitService){
         $params = request()->all();
 
@@ -531,6 +493,50 @@ class PermitApi extends Controller
 
             $req->save();
         } catch (\Exception $e) {
+            $response->status = 500;
+            $response->message = $e->getMessage();
+        }
+
+        return response()->json($response);
+    }
+
+    public function decree_upload(PermitService $permitService){
+        $params = request()->all();
+
+        $response = new ApiResponse();
+        DB::beginTransaction();
+        try {
+            $req = TrxRequest::query()
+                ->with('decree')
+                ->where('req_id', $params['req_id'])
+                ->first();
+
+            $params_data = $params;
+            unset($params_data['decree_file']);
+
+            $decree_type = null;
+            if(empty($req->decree)){
+                $decree_type = TrxPermitDecree::TYPE_NEW;
+                if(!empty($req->ext_of_decree)){
+                    $decree_type = TrxPermitDecree::TYPE_EXTENSION;
+                }
+            }else{
+                $decree_type = TrxPermitDecree::TYPE_REVISION;
+            }
+            
+            $decree = new TrxPermitDecree($params_data);
+            $decree->decree_type = $decree_type;
+
+            $file = $params['decree_file'];
+            $savedFolder = "decree/$req->req_id";
+            $savedPath = $file->storeAs($savedFolder, $file->getClientOriginalName());
+
+            $decree->file_path = $savedPath;
+
+            $decree->save();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
             $response->status = 500;
             $response->message = $e->getMessage();
         }

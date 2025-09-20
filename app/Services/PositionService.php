@@ -75,7 +75,8 @@ class PositionService
     {
         $results = Cache::remember('position_tree', 10*60, function(){
             // Get all positions that are not disabled
-            $positions = Position::where('is_disabled', false)
+            $positions = Position::query()
+                ->where('is_disabled', false)
                 ->orderBy('name')
                 ->get();
 

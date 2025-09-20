@@ -61,6 +61,7 @@ class PermitService
         $query = $this->_listRequestSelectQuery();
         
         $query = $query
+            ->with('decree')
             ->where('is_disabled', 0)
             ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED]);
 
@@ -222,6 +223,26 @@ class PermitService
                             )
                         )
                     
+                    -- If status is 'verified', all approval_status are 'approved', and has decree
+                    WHEN 
+                        trx_request.status = 'verified' 
+                        AND NOT EXISTS (
+                            SELECT 1 FROM trx_request_approval 
+                            WHERE trx_request_approval.req_id = trx_request.req_id 
+                            AND (
+                                trx_request_approval.approval_status IS NULL 
+                                OR trx_request_approval.approval_status != 'approved'
+                            )
+                        ) 
+                        AND EXISTS (
+                            SELECT 1 FROM trx_permit_decree 
+                            WHERE 
+                                trx_permit_decree.req_id = trx_request.req_id 
+                                and trx_permit_decree.is_disabled = 0
+                        )
+                    THEN 
+                        '".self::STATUS_TEXT_PUBLISHED."'
+                    
                     -- If status is 'verified' and all approval_status are 'approved'
                     WHEN 
                         trx_request.status = 'verified' 
@@ -237,7 +258,7 @@ class PermitService
                         '".self::STATUS_TEXT_PUBLISHING."'
                     
                     -- Default case for other scenarios
-                    ELSE 'Dalam Proses'
+                    ELSE 'Status Error'
                 END as approval_status
             "))
             ->addSelect(DB::raw("

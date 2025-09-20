@@ -56,6 +56,7 @@
                 @if(is_approver())
                   <li><a class="dropdown-item" href="{{ url('/permit/approval_list') }}">Approval</a></li>
                 @endif
+                <li><a class="dropdown-item" href="{{ url('/permit/decree_list') }}">Penerbitan Izin</a></li>
               </ul>
             </li>
           @endif
