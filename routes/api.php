@@ -19,6 +19,7 @@ Route::prefix('permit')->group(function () {
     Route::post('/dt_request_list', [PermitApi::class, 'dt_request_list']);
     Route::post('/dt_request_officer_list', [PermitApi::class, 'dt_request_officer_list']);
     Route::post('/request_submit', [PermitApi::class, 'request_submit']);
+    Route::post('/dt_permitpublish_list', [PermitApi::class, 'dt_permitpublish_list']);
 
     Route::prefix('revision_notes')->group(function () {
         Route::get('/list/{req_id}', [PermitApi::class, 'revision_notes_list']);
@@ -26,5 +27,6 @@ Route::prefix('permit')->group(function () {
     });
 
     Route::post('/reqdoc_update', [PermitApi::class, 'reqdoc_update']);
+    Route::post('/reqdoc_info', [PermitApi::class, 'reqdoc_info']);
     Route::post('/request_update', [PermitApi::class, 'request_update']);
 });

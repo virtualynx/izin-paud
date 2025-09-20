@@ -9,9 +9,9 @@
 @php
     $page_title = $request->name;
     if($is_approver){
-        $page_title = 'Approve '.$page_title;
+        $page_title = 'Approve Pengajuan: '.$page_title;
     }else{
-        $page_title = 'Verifikasi '.$page_title;
+        $page_title = 'Verifikasi Pengajuan: '.$page_title;
     }
 @endphp
 
@@ -41,7 +41,7 @@
         <div class="col-md-11">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Verifikasi Dokumen - {{ $request->name }}</h4>
+                    <h4 class="mb-0">{{ $page_title }}</h4>
                     <span class="badge bg-light text-dark fs-6" id="statusBadge">Loading status...</span>
                 </div>
 
@@ -202,7 +202,7 @@
                                         class="form-control" 
                                         rows="5" 
                                         placeholder="Catatan revisi dari pemeriksa (opsional)"
-                                    >{{ !empty($request->latest_revision_note)? $request->latest_revision_note->notes: '' }}</textarea>
+                                    >{{ !empty($request->revision_note)? $request->revision_note->notes: '' }}</textarea>
                                     
                                     <div id="req-notes-btn-wrapper" class="d-flex justify-content-start gap-2 mt-3">
                                         <button id="req-notes-btn" class="btn btn-primary">
@@ -683,7 +683,7 @@
             
             // Update status badge in header
             let overallStatus = 'pending';
-            let overallBadgeClass = 'bg-secondary';
+            let overallBadgeClass = 'bg-light';
             
             if (allVerified) {
                 overallStatus = 'verified';
@@ -695,7 +695,7 @@
             
             $('#statusBadge')
                 .text(overallStatus)
-                .removeClass('bg-success bg-warning bg-secondary bg-info')
+                .removeClass('bg-light bg-success bg-warning bg-secondary bg-info')
                 .addClass(overallBadgeClass);
             
             // Enable/disable the verify button based on the status

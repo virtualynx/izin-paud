@@ -146,12 +146,6 @@
                 // ]
             });
 
-            $('#table_permit_wrapper').on('click', '.view-btn', function(event) {
-                event.preventDefault();
-                // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
-            });
-
             $('#table_permit_wrapper').on('click', '.revisi-btn', function(event) {
                 event.preventDefault();
                 let reqId = $(this).data('req_id');
@@ -161,13 +155,11 @@
             $('#table_permit_wrapper').on('click', '.edit-btn', function(event) {
                 event.preventDefault();
                 // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
+                window.location.href = "{{ url('permit/edit') }}/" + $(this).data('req_id');
             });
             
             $('#table_permit_wrapper').on('click', '.delete-btn', function(event) {
                 event.preventDefault();
-                // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
-                window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
             });
 
             // $('[name="published_month"]').on('change', function(event){

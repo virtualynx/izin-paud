@@ -16,11 +16,14 @@ Route::prefix('sso')->group(function () {
 Route::middleware(['sso_login'])->group(function () {
     Route::prefix('permit')->group(function () {
         Route::get('/request', [PermitController::class, 'page_request']);
+        Route::get('/edit/{req_id}', [PermitController::class, 'page_edit']);
         Route::get('/request_list', [PermitController::class, 'request_list']);
         Route::get('/verify_list', [PermitController::class, 'verify_list']);
         Route::get('/approval_list', [PermitController::class, 'approval_list']);
+        Route::get('/publish_list', [PermitController::class, 'publish_list']);
         
         Route::get('/verify/{req_id}', [PermitController::class, 'page_verify']);
+        Route::get('/revision/{req_id}', [PermitController::class, 'page_revision']);
         Route::prefix('document')->group(function () {
             Route::get('/preview/{req_doc_id}', [PermitController::class, 'document_preview']);
         });

@@ -134,10 +134,15 @@
             });
             
             @if(is_verificator() || is_approver())
+                $('#table_permit_wrapper').on('click', '.revisi-btn', function(event) {
+                    event.preventDefault();
+                    window.location.href = "{{ url('permit/revision') }}/" + $(this).data('req_id');
+                });
+
                 $('#table_permit_wrapper').on('click', '.verify-btn', function(event) {
                     event.preventDefault();
                     // window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
-                    window.location.href = "{{ url('permit/verify') }}/"+$(this).data('req_id');
+                    window.location.href = "{{ url('permit/verify') }}/" + $(this).data('req_id');
                 });
             @endif
 

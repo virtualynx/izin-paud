@@ -37,6 +37,10 @@ class PermitController extends Controller
         return view('pages.permit.approval_list');
     }
 
+    public function publish_list(){
+        return view('pages.permit.publish_list');
+    }
+
     public function page_verify($req_id, UserService $userService, PermitService $permitService){
         $params = request()->all();
 
@@ -64,7 +68,7 @@ class PermitController extends Controller
 
         $request = TrxRequest::query()
             ->with('documents.doctype')
-            ->with('latest_revision_note')
+            ->with('revision_note')
             ->where('is_disabled', 0)
             ->where('req_id', $req_id)
             ->first();
@@ -90,29 +94,70 @@ class PermitController extends Controller
         ]);
     }
 
-    public function page_revision($req_id){
-        // Get the request data with related documents
-        $request_data = TrxRequest::with(['documents.doctype', 'revision_notes'])
-            ->findOrFail($req_id);
-        
-        // Get all document requirements
-        $documents = DoctypeRequirement::where('is_active', 1)
-            ->orderBy('order_num')
-            ->get();
-        
-        // Organize uploaded files by doctypereq_id
-        $uploaded_files = [];
-        foreach ($request_data->documents as $document) {
-            $uploaded_files[$document->doctypereq_id][] = (object)[
-                'file_id' => $document->req_doc_id,
-                'filename' => basename($document->file_path),
-                'filepath' => $document->file_path,
-                'verify_status' => $document->verify_status,
-                'revision_notes' => $document->revision_notes->pluck('notes')->toArray()
-            ];
+    public function page_edit($req_id){
+        $params = request()->all();
+        $user = userinfo();
+
+        $request = TrxRequest::query()
+            ->with('documents.doctype')
+            ->with('documents.revision_note')
+            ->with('revision_note')
+            ->where('is_disabled', 0)
+            ->where('req_id', $req_id)
+            ->first();
+
+        $transformed_documents = [];
+        foreach($request->documents as $doc){
+            $path_arr = explode("/", $doc['file_path']);
+            $filename = $path_arr[count($path_arr)-1];
+            $doc = json_decode(json_encode($doc), true);
+            $doc['filename'] = $filename;
+            $doc['mime'] = Storage::disk()->mimeType($doc['file_path']);
+            $transformed_documents []= $doc;
         }
-        
-        return view('permit.revision', compact('request_data', 'documents', 'uploaded_files'));
+
+        $transformed_documents = json_decode(json_encode($transformed_documents));
+
+        return view('pages.permit.edit_and_revision', [
+            'request' => $request,
+            'documents' => $transformed_documents,
+            'is_revision' => false
+        ]);
+    }
+
+    public function page_revision($req_id){
+        $params = request()->all();
+        $user = userinfo();
+
+        $request = TrxRequest::query()
+            ->with('documents.doctype')
+            ->with('documents.revision_note')
+            ->with('revision_note')
+            ->where('is_disabled', 0)
+            ->where('req_id', $req_id)
+            ->first();
+
+        $filteredDocuments = [];
+        foreach($request->documents as $doc){
+            if(empty($doc->revision_note)){
+                continue;
+            }
+
+            $path_arr = explode("/", $doc['file_path']);
+            $filename = $path_arr[count($path_arr)-1];
+            $doc = json_decode(json_encode($doc), true);
+            $doc['filename'] = $filename;
+            $doc['mime'] = Storage::disk()->mimeType($doc['file_path']);
+            $filteredDocuments []= $doc;
+        }
+
+        $filteredDocuments = json_decode(json_encode($filteredDocuments));
+
+        return view('pages.permit.edit_and_revision', [
+            'request' => $request,
+            'documents' => $filteredDocuments,
+            'is_revision' => true
+        ]);
     }
 
     public function document_preview($req_doc_id){

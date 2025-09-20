@@ -42,6 +42,14 @@ class TrxRequest extends Model
             ->orderBy('created_at', 'desc');
     }
 
+    public function revision_note()
+    {
+        return $this->hasOne(TrxRevisionNotes::class, 'req_id', 'req_id')
+            ->where('is_disabled', 0)
+            ->whereNull('req_doc_id')
+            ->where('is_resolved', 0);
+    }
+
     public function latest_revision_note()
     {
         return $this->hasOne(TrxRevisionNotes::class, 'req_id', 'req_id')

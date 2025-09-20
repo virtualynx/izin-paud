@@ -239,8 +239,7 @@ class PermitService
                     -- Default case for other scenarios
                     ELSE 'Dalam Proses'
                 END as approval_status
-            "
-            ))
+            "))
             ->addSelect(DB::raw("
                 CASE 
                     -- For verified status with no approvals, use current timestamp or NULL
@@ -259,8 +258,7 @@ class PermitService
                         AND tra.approval_status IS NOT NULL
                     )
                 END as approval_time
-            "
-            ));
+            "));
         
         return $query;
     }
