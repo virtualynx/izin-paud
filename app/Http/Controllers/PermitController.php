@@ -208,8 +208,10 @@ class PermitController extends Controller
     }
 
     public function decree_preview($permit_decree_id){
-        // Disable session for this route to prevent no-cache headers
-        config(['session.driver' => 'array']);
+        // Remove existing headers first
+        header_remove('Cache-Control');
+        header_remove('Pragma');
+        header_remove('Expires');
 
         $params = request()->all();
 

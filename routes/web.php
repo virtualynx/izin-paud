@@ -28,12 +28,8 @@ Route::middleware(['sso_login'])->group(function () {
         Route::prefix('document')->group(function () {
             Route::get('/preview/{req_doc_id}', [PermitController::class, 'document_preview']);
         });
-        // Route::prefix('decree')->group(function () {
-        //     Route::get('/preview/{permit_decree_id}', [PermitController::class, 'decree_preview']);
-        // });
+        Route::prefix('decree')->group(function () {
+            Route::get('/preview/{permit_decree_id}', [PermitController::class, 'decree_preview']);
+        });
     });
 });
-
-// Add this route outside any middleware groups
-Route::get('/permit/decree/preview/{permit_decree_id}', [PermitController::class, 'decree_preview'])
-    ->withoutMiddleware(['web']); // Remove web middleware which includes session
