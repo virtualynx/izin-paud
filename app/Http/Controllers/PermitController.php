@@ -157,6 +157,11 @@ class PermitController extends Controller
     }
 
     public function document_preview($req_doc_id){
+        // Remove existing headers which may conflict with our cache-control
+        header_remove('Cache-Control');
+        header_remove('Pragma');
+        header_remove('Expires');
+        
         $params = request()->all();
 
         $user = userinfo();
@@ -208,7 +213,7 @@ class PermitController extends Controller
     }
 
     public function decree_preview($permit_decree_id){
-        // Remove existing headers first
+        // Remove existing headers which may conflict with our cache-control
         header_remove('Cache-Control');
         header_remove('Pragma');
         header_remove('Expires');
