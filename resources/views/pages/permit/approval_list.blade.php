@@ -89,7 +89,7 @@
                             
                             content += `
                                 <button 
-                                    class="btn btn-sm btn-info view-btn" 
+                                    class="btn btn-sm btn-info view-btn me-1" 
                                     data-req_id="${row.req_id}"
                                 >
                                     <i class="bi bi-eye"></i> Lihat
@@ -99,7 +99,7 @@
                             if(row.status == '{{ TrxRequest::STATUS_VERIFIED }}' && row.is_my_approval){
                                 content += `
                                     <button 
-                                        class="btn btn-sm btn-success approve-btn" 
+                                        class="btn btn-sm btn-success approve-btn me-1" 
                                         data-req_id="${row.req_id}"
                                     >
                                         <i class="bi bi-hand-thumbs-up-fill"></i> Setujui

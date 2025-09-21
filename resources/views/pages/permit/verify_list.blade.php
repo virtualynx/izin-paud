@@ -89,7 +89,7 @@
 
                             content += `
                                 <button 
-                                    class="btn btn-sm btn-info view-btn" 
+                                    class="btn btn-sm btn-info view-btn me-1" 
                                     data-req_id="${row.req_id}"
                                 >
                                     <i class="bi bi-eye"></i> Lihat
@@ -100,7 +100,7 @@
                                 if(row.status_text == '{{ PermitService::STATUS_TEXT_REVISION }}'){
                                     content += `
                                         <button 
-                                            class="btn btn-sm btn-warning revisi-btn" 
+                                            class="btn btn-sm btn-warning revisi-btn me-1" 
                                             data-req_id="${row.req_id}"
                                         >
                                             <i class="bi bi-pencil"></i> Revisi
@@ -109,7 +109,7 @@
                                 }else if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
                                     content += `
                                         <button 
-                                            class="btn btn-sm btn-warning verify-btn" 
+                                            class="btn btn-sm btn-warning verify-btn me-1" 
                                             data-req_id="${row.req_id}"
                                         >
                                             <i class="bi bi-zoom-in"></i> Verifikasi

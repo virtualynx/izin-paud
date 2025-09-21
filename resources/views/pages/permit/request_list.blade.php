@@ -42,6 +42,8 @@
         </div>
     </div>
 
+    @include('components.document_preview')
+
 @endsection
 
 @push('scripts')
@@ -95,17 +97,17 @@
                             
                             content += `
                                 <button 
-                                    class="btn btn-sm btn-info view-btn" 
+                                    class="btn btn-sm btn-info view-btn me-1" 
                                     data-req_id="${row.req_id}"
                                 >
-                                    <i class="bi bi-eye"></i> Lihat
+                                    <i class="bi bi-eye"></i> Info
                                 </button>
                             `;
 
                             if(row.status_text == '{{ PermitService::STATUS_TEXT_REVISION }}'){
                                 content += `
                                     <button 
-                                        class="btn btn-sm btn-warning revisi-btn" 
+                                        class="btn btn-sm btn-warning revisi-btn me-1" 
                                         data-req_id="${row.req_id}"
                                     >
                                         <i class="bi bi-pencil"></i> Revisi
@@ -113,17 +115,33 @@
                                 `;
                             }
 
+                            if(row.status_text == '{{ PermitService::STATUS_TEXT_PUBLISHED }}' && row.decree){
+                                content += `
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-sm btn-primary preview-pdf me-1" 
+                                        data-permit_decree_id="${row.decree.permit_decree_id}"
+                                        data-filename="${row.decree.filename}"
+                                        data-mime="${row.decree.mime}"
+                                        data-url="{{ url('permit/decree/preview') }}/${row.decree.permit_decree_id}"
+                                        data-index=""
+                                    >
+                                        <i class="bi bi-eye"></i> SK Izin
+                                    </button>
+                                `;
+                            }
+
                             if(row.status == '{{ TrxRequest::STATUS_DRAFT }}'){
                                 content += `
                                     <button 
-                                        class="btn btn-sm btn-primary edit-btn" 
+                                        class="btn btn-sm btn-primary edit-btn me-1" 
                                         data-req_id="${row.req_id}"
                                     >
                                         <i class="bi bi-pencil-square"></i> Ubah
                                     </button>
                                     
                                     <button 
-                                        class="btn btn-sm btn-danger delete-btn" 
+                                        class="btn btn-sm btn-danger delete-btn me-1" 
                                         data-req_id="${row.req_id}"
                                         data-name="${row.name}"
                                     >

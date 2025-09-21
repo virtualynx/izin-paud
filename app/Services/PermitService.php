@@ -61,7 +61,6 @@ class PermitService
         $query = $this->_listRequestSelectQuery();
         
         $query = $query
-            ->with('decree')
             ->where('is_disabled', 0)
             ->whereIn('status', [TrxRequest::STATUS_SUBMITTED, TrxRequest::STATUS_VERIFIED]);
 
@@ -279,7 +278,8 @@ class PermitService
                         AND tra.approval_status IS NOT NULL
                     )
                 END as approval_time
-            "));
+            "))
+            ->with('decree');
         
         return $query;
     }

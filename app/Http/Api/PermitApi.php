@@ -188,6 +188,19 @@ class PermitApi extends Controller
 
         $data = [];
         foreach ($rs as $row) {
+            $decree_fileinfo = null;
+            if(!empty($row->decree)){
+                $decree_fileinfo = [
+                    'permit_decree_id' => $row->decree->permit_decree_id
+                ];
+
+                $path_arr = explode("/", $row->decree->file_path);
+                $filename = $path_arr[count($path_arr)-1];
+                $decree_fileinfo['filename'] = $filename;
+
+                $decree_fileinfo['mime'] = Storage::disk()->mimeType($row->decree->file_path);
+            }
+
             $data[] = [
                 'req_id' => $row->req_id,
                 'reg_num' => $row->reg_num,
@@ -195,6 +208,7 @@ class PermitApi extends Controller
                 'request_date' => $row->created_at->format('d-m-Y H:i'),
                 'status' => $row->status,
                 'status_text' => $row->approval_status,
+                'decree' => $decree_fileinfo,
                 // 'status_text' => $row->approval_status.(!empty($row->approval_time)? " (".$row->approval_time.")": ''),
                 'actions' => null, // Will be filled by JS
             ];

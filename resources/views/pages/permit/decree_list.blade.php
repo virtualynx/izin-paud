@@ -92,17 +92,6 @@
     </div>
 
     <style>
-        .decree-file-label {
-            cursor: pointer;
-        }
-        .decree-file-label:hover {
-            background-color: #0d6efd;
-            color: white;
-        }
-        .file-preview-container .alert {
-            margin-bottom: 0;
-        }
-
         .decree-file-modal-label {
             cursor: pointer;
             padding: 10px;
