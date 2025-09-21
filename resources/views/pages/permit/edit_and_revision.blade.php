@@ -361,7 +361,7 @@
                         tbody.empty();
                         
                         if (response.data.length === 0) {
-                            Loading.tableEmpty(tbody, 5, 'Tidak ada dokumen yang perlu direvisi');
+                            Loading.tableLoadingEmpty(tbody, 5, 'Tidak ada dokumen yang perlu direvisi');
                             return;
                         }
 
@@ -421,7 +421,7 @@
                             tbody.append(row);
                         });
                     } else {
-                        Loading.tableError(tbody, 5, response.message);
+                        Loading.tableLoadingError(tbody, 5, response.message);
                     }
                 },
                 error: Utils.ajaxErrorHandler

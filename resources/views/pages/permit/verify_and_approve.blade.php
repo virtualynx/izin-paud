@@ -362,12 +362,12 @@
                                     </td>
                                 </tr>
                             `);
-                            Loading.tableEmpty(tbody, 4, 'Tidak ada data');
+                            Loading.tableLoadingEmpty(tbody, 4, 'Tidak ada data');
                         }
                     } else {
                         tbody.empty();
                         // Show error message
-                        Loading.tableError(tbody, 4, response.message);
+                        Loading.tableLoadingError(tbody, 4, response.message);
                         // Modal.show(
                         //     `<div class="text-center">
                         //         <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
