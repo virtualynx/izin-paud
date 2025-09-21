@@ -238,13 +238,21 @@ class PermitController extends Controller
             ? 'attachment; filename="' . $filename . '"' // Force download
             : 'inline; filename="' . $filename . '"';    // Preview in browser
 
+        // $headers = [
+        //     'Content-Type' => Storage::disk()->mimeType($decree->file_path),
+        //     'Content-Disposition' => $contentDisposition,
+        //     'Cache-Control' => 'public, max-age=31536000', // 1 year
+        //     'Expires' => gmdate('D, d M Y H:i:s \G\M\T', time() + 31536000),
+        //     'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
+        //     'ETag' => $etag,
+        // ];
+
         $headers = [
             'Content-Type' => Storage::disk()->mimeType($decree->file_path),
             'Content-Disposition' => $contentDisposition,
-            'Cache-Control' => 'public, max-age=31536000', // 1 year
-            'Expires' => gmdate('D, d M Y H:i:s \G\M\T', time() + 31536000),
-            'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
+            'Cache-Control' => 'must-revalidate', // Force revalidation with ETag
             'ETag' => $etag,
+            'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', $lastModified),
         ];
 
         return Storage::disk()->response($decree->file_path, null, $headers);
