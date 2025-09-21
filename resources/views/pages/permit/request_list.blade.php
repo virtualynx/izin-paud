@@ -154,7 +154,6 @@
 
             $('#table_permit_wrapper').on('click', '.edit-btn', function(event) {
                 event.preventDefault();
-                // window.location.href = "{{ url('permit/verify') }}/" +$(this).data('req_id');
                 window.location.href = "{{ url('permit/edit') }}/" + $(this).data('req_id');
             });
             

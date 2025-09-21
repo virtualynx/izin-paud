@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Api\PermitApi;
 use App\Models\Masters\DoctypeRequirement;
 use App\Models\TrxPermitDecree;
 use App\Models\TrxRequest;
@@ -45,10 +46,7 @@ class PermitController extends Controller
     public function page_verify($req_id, UserService $userService, PermitService $permitService){
         $params = request()->all();
 
-        $user = userinfo();
-
-        $is_approver = false;
-        if(!empty($params['mode']) && $params['mode'] == '1'){
+        if(!empty($params['mode']) && $params['mode'] == PermitApi::REQUEST_UPDATE_MODE_APPROVE){
             if(!is_approver()){
                 abort(403);
             }
@@ -63,8 +61,6 @@ class PermitController extends Controller
             if($req_approval_map[$req_id]->approver_position_id != $mainPosition->position_id){
                 abort(403);
             }
-
-            $is_approver = true;
         }
 
         $request = TrxRequest::query()
@@ -90,8 +86,7 @@ class PermitController extends Controller
         return view('pages.permit.verify_and_approve', [
             'request' => $request,
             'documents' => $documents,
-            'is_approver' => $is_approver,
-            'mode' => $params['mode']?? 0
+            'mode' => $params['mode']?? PermitApi::REQUEST_UPDATE_MODE_VERIFY
         ]);
     }
 

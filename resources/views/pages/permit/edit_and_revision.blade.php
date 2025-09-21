@@ -2,6 +2,7 @@
     use App\Models\TrxRequest;
     use App\Models\TrxRequestDocument;
     use App\Models\TrxRequestApproval;
+    use App\Http\Api\PermitApi;
 @endphp
 
 @extends('app')
@@ -180,57 +181,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php
-                                            $index = 1;
-                                        ?>
-                                        @foreach ($documents as $doc)
-                                            <tr>
-                                                <td>{{ $index}}</td>
-                                                <td>{{ $doc->doctype->name }} {!! $doc->doctype->is_optional? '<span class="text-muted">(opsional)</span>': '<span class="text-danger">*wajib</span>' !!}</td>
-                                                <td>
-                                                    @if(!empty($doc->revision_note))
-                                                        {{ $doc->revision_note->notes }}
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex flex-column">
-                                                        <button 
-                                                            type="button" 
-                                                            class="btn btn-sm btn-outline-primary preview-pdf mb-2" 
-                                                            data-req_doc_id="{{ $doc->req_doc_id }}"
-                                                            data-filename="{{ $doc->filename }}"
-                                                            data-mime="{{ $doc->mime }}"
-                                                            data-url="{{ url('permit/document/preview').'/'.$doc->req_doc_id }}"
-                                                            data-index="{{ $index++ }}"
-                                                        >
-                                                            <i class="bi bi-eye"></i> Lihat File
-                                                        </button>
-                                                        <span class="ms-2 mb-2 .filename">{{ $doc->filename }}</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <!-- File upload for revision -->
-                                                    <div class="file-upload-container">
-                                                        <input type="file" 
-                                                            class="form-control form-control-sm file-upload" 
-                                                            data-req_doc_id="{{ $doc->req_doc_id }}"
-                                                            accept=".pdf,.jpg,.jpeg,.png">
-                                                        <small class="form-text text-muted">Unggah file revisi</small>
-                                                        <div class="file-preview-container mt-2" style="display: none;">
-                                                            <img class="file-preview" src="" alt="Preview">
-                                                            <div class="mt-1">
-                                                                <button type="button" class="btn btn-sm btn-danger remove-file">Hapus</button>
-                                                            </div>
-                                                        </div>
-                                                        <div class="file-name-container mt-2" style="display: none;">
-                                                            <div class="alert alert-success p-2"><span class="filename"></span> (Terupload)</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
+                                        <!-- Loaded via JavaScript -->
                                     </tbody>
                                 </table>
                             </div>
@@ -255,11 +206,11 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function() {
-            let isEditMode = false;
-            let originalData = {};
-            const editedData = {};
+        let isEditMode = false;
+        let originalData = {};
+        const editedData = {};
 
+        $(document).ready(function() {
             // Toggle edit mode for information fields
             $('.edit-btn').on('click', function() {
                 enableEditMode();
@@ -272,254 +223,327 @@
             $('.save-btn').on('click', function() {
                 saveInformationChanges();
             });
+
+            renderRevisionDocuments();
+        });
+ 
+        // Enable edit mode function
+        function enableEditMode() {
+            if (isEditMode) return;
             
-            // Handle file upload changes
-            $('.file-upload').on('change', function(e) {
-                const reqDocId = $(this).data('req_doc_id');
-                const file = this.files[0];
-                const $input = $(this);
-
-                $input.siblings('.file-preview-container').hide();
-                $input.siblings('.file-name-container').hide();
+            isEditMode = true;
+            
+            // Store original values
+            $('.editable-field').each(function() {
+                const field = $(this).data('field');
+                originalData[field] = $(this).data('original');
                 
-                if (file) {
-                    let $previewContainer = $input.siblings('.file-preview-container');
-                    
-                    if (file.type.startsWith('image/')) {
-                        $previewContainer = $input.siblings('.file-preview-container');
-                    } else {
-                        // For PDFs, show file name
-                        $previewContainer = $input.siblings('.file-name-container');
-                    }
-
-                    // Show loading state
-                    $input.prop('disabled', true);
-                    const originalText = $input.next('.form-text').text();
-                    $input.next('.form-text').html('<span class="text-primary">Mengunggah...</span>');
-                    
-                    // Create FormData
-                    const formData = new FormData();
-                    formData.append('req_doc_id', reqDocId);
-                    formData.append('file', file);
-                    formData.append('verify_status', 'pending');
-                    
-                    // Upload file immediately
-                    $.ajax({
-                        url: '{{ url("api/permit/reqdoc_update") }}',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            if (response.status == 0) {
-                                // Show success message
-                                $input.next('.form-text').html('<span class="text-success">File berhasil diunggah!</span>');
-                                
-                                if (file.type.startsWith('image/')) {
-                                    // Show preview if it's an image
-                                    const previewImg = $previewContainer.find('.file-preview');
-                                    const reader = new FileReader();
-                                    reader.onload = function(e) {
-                                        previewImg.attr('src', e.target.result);
-                                        $previewContainer.show();
-                                    };
-                                    reader.readAsDataURL(file);
-                                } else {
-                                    // For PDFs, show file name
-                                    $previewContainer.find('.filename').html(file.name);
-                                    $previewContainer.show();
-                                }
-
-                                $(`[data-req_doc_id="${reqDocId}"]`).siblings('.filename').html(file.name);
-                            } else {
-                                $input.next('.form-text').html('<span class="text-danger">Gagal mengunggah: ' + (response.message || 'Error') + '</span>');
-                                $input.val(''); // Reset input
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            $input.next('.form-text').html('<span class="text-danger">Error mengunggah file</span>');
-                            $input.val(''); // Reset input
-                            Utils.ajaxErrorHandler(xhr, status, error);
-                        },
-                        beforeSend: () => {
-
-                        },
-                        complete: function() {
-                            $input.prop('disabled', false);
-                            // Restore original text after 3 seconds
-                            setTimeout(() => {
-                                $input.next('.form-text').text('Unggah file revisi');
-                            }, 3000);
-                        }
-                    });
+                // Convert to input fields
+                const currentValue = $(this).text().trim();
+                $(this).addClass('edit-mode');
+                
+                if (field === 'founded_year') {
+                    $(this).html(`<input type="number" class="form-control form-control-sm" value="${currentValue}" min="1900" max="${new Date().getFullYear()}">`);
+                } else {
+                    $(this).html(`<input type="text" class="form-control form-control-sm" value="${currentValue}">`);
                 }
             });
             
-            // Enable edit mode function
-            function enableEditMode() {
-                if (isEditMode) return;
-                
-                isEditMode = true;
-                
-                // Store original values
-                $('.editable-field').each(function() {
-                    const field = $(this).data('field');
-                    originalData[field] = $(this).data('original');
-                    
-                    // Convert to input fields
-                    const currentValue = $(this).text().trim();
-                    $(this).addClass('edit-mode');
-                    
-                    if (field === 'founded_year') {
-                        $(this).html(`<input type="number" class="form-control form-control-sm" value="${currentValue}" min="1900" max="${new Date().getFullYear()}">`);
-                    } else {
-                        $(this).html(`<input type="text" class="form-control form-control-sm" value="${currentValue}">`);
-                    }
-                });
-                
-                // Show/hide buttons
-                $('.edit-btn').hide();
-                $('.save-btn, .cancel-btn').show();
+            // Show/hide buttons
+            $('.edit-btn').hide();
+            $('.save-btn, .cancel-btn').show();
 
-                // disable process-button
-                $('#process-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
-            }
+            // disable process-button
+            $('#process-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
+        }
+        
+        // Disable edit mode function
+        function disableEditMode() {
+            if (!isEditMode) return;
             
-            // Disable edit mode function
-            function disableEditMode() {
-                if (!isEditMode) return;
-                
-                isEditMode = false;
-                
-                // Revert to original values
-                $('.editable-field').each(function() {
-                    const field = $(this).data('field');
-                    $(this).removeClass('edit-mode').text(originalData[field]);
-                });
-                
-                // Clear edited data
-                Object.keys(editedData).forEach(key => delete editedData[key]);
-                
-                // Show/hide buttons
-                $('.edit-btn').show();
-                $('.save-btn, .cancel-btn').hide();
+            isEditMode = false;
+            
+            // Revert to original values
+            $('.editable-field').each(function() {
+                const field = $(this).data('field');
+                $(this).removeClass('edit-mode').text(originalData[field]);
+            });
+            
+            // Clear edited data
+            Object.keys(editedData).forEach(key => delete editedData[key]);
+            
+            // Show/hide buttons
+            $('.edit-btn').show();
+            $('.save-btn, .cancel-btn').hide();
 
-                // enable process-button
-                $('#process-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
-            }
-            
-            // Save information changes
-            function saveInformationChanges() {
-                // Collect edited values
-                $('.editable-field').each(function() {
-                    const field = $(this).data('field');
-                    const value = $(this).find('input').val();
-                    
-                    if (value !== originalData[field]) {
-                        editedData[field] = value;
-                    }
-                });
+            // enable process-button
+            $('#process-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
+        }
+        
+        // Save information changes
+        function saveInformationChanges() {
+            // Collect edited values
+            $('.editable-field').each(function() {
+                const field = $(this).data('field');
+                const value = $(this).find('input').val();
                 
-                if (Object.keys(editedData).length === 0) {
-                    Modal.showInfo('Tidak ada perubahan yang disimpan.');
-                    disableEditMode();
-                    return;
+                if (value !== originalData[field]) {
+                    editedData[field] = value;
                 }
+            });
+            
+            if (Object.keys(editedData).length === 0) {
+                Modal.showInfo('Tidak ada perubahan yang disimpan.');
+                disableEditMode();
+                return;
+            }
+            
+            // Show loading
+            Loading.show('Menyimpan perubahan...');
+            
+            // Send AJAX request
+            $.ajax({
+                url: '{{ url("api/permit/request_update") }}',
+                type: 'POST',
+                data: {
+                    req_id: '{{ $request->req_id }}',
+                    ...editedData
+                },
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.status == 0) {
+                        Modal.showSuccess('Perubahan Informasi berhasil.', function() {
+                            // Update original values
+                            Object.keys(editedData).forEach(field => {
+                                originalData[field] = editedData[field];
+                                $(`[data-field="${field}"]`).data('original', editedData[field]);
+                            });
+                            
+                            // Clear edited data
+                            Object.keys(editedData).forEach(key => delete editedData[key]);
+                            
+                            disableEditMode();
+                            
+                            // Optionally reload page to reflect changes
+                            // window.location.reload();
+                        });
+                    } else {
+                        console.log(response.message);
+                        Modal.showError('Terjadi kesalahan saat menyimpan perubahan.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Utils.ajaxErrorHandler(xhr, status, error);
+                },
+                complete: () => {
+                    Loading.hide();
+                }
+            });
+        }
+
+        function renderRevisionDocuments() {
+            const tbody = $('#table_documents tbody');
+
+            $.ajax({
+                url: '{{ url("api/permit/revision_documents/list")."/".$request->req_id }}',
+                type: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                beforeSend: () => {
+                    Loading.tableLoading(tbody, 5, 'Memuat dokumen revisi...');
+                },
+                success: function(response) {
+                    if (response.status == 0) {
+                        tbody.empty();
+                        
+                        if (response.data.length === 0) {
+                            Loading.tableEmpty(tbody, 5, 'Tidak ada dokumen yang perlu direvisi');
+                            return;
+                        }
+
+                        response.data.forEach((doc, index) => {
+                            let acceptedFiles = '';
+
+                            if (doc.mime.startsWith('image')) {
+                                acceptedFiles = '.jpg,.jpeg,.png';
+                            } else {
+                                acceptedFiles = '.pdf';
+                            }
+
+                            const row = `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${doc.doctype.name} ${doc.doctype.is_optional ? '<span class="text-muted">(opsional)</span>' : '<span class="text-danger">*wajib</span>'}</td>
+                                    <td>${doc.revision_note ? doc.revision_note.notes : '<span class="text-muted">-</span>'}</td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="mb-2 filename">${doc.filename}</span>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-sm btn-outline-primary preview-pdf ms-2" 
+                                                data-req_doc_id="${doc.req_doc_id}"
+                                                data-filename="${doc.filename}"
+                                                data-mime="${doc.mime}"
+                                                data-url="{{ url('permit/document/preview') }}/${doc.req_doc_id}"
+                                            >
+                                                <i class="bi bi-eye"></i> Lihat File
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="file-upload-container">
+                                            <label class="btn btn-sm btn-outline-primary w-100 file-upload-label">
+                                                <i class="bi bi-upload"></i> Unggah Revisi
+                                                <input type="file" 
+                                                    class="d-none file-upload-input" 
+                                                    data-req_doc_id="${doc.req_doc_id}"
+                                                    accept="${acceptedFiles}">
+                                            </label>
+                                            <div class="file-preview-container mt-2" style="display: none;">
+                                                <img class="file-preview" src="" alt="Preview">
+                                                <div class="mt-1">
+                                                    <button type="button" class="btn btn-sm btn-danger remove-file">Hapus</button>
+                                                </div>
+                                            </div>
+                                            <div class="file-name-container mt-2" style="display: none;">
+                                                <div class="alert alert-success p-2">
+                                                    <span class="filename"></span> (Terupload)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.append(row);
+                        });
+                    } else {
+                        Loading.tableError(tbody, 5, response.message);
+                    }
+                },
+                error: Utils.ajaxErrorHandler
+            });
+        }
+
+        // Handle file upload changes
+        $(document).on('change', '.file-upload-input', function(e) {
+            const reqDocId = $(this).data('req_doc_id');
+            const file = this.files[0];
+            const $container = $(this).closest('.file-upload-container');
+            const $label = $container.find('.file-upload-label');
+
+            const originalLabel = $label.html();
+
+            if (file) {
+                // Show loading state
+                $label.prop('disabled', true).html('<i class="bi bi-arrow-repeat spin"></i> Mengunggah...');
                 
-                // Show loading
-                Loading.show('Menyimpan perubahan...');
+                const formData = new FormData();
+                formData.append('req_doc_id', reqDocId);
+                formData.append('file', file);
+                // formData.append('verify_status', 'pending');
                 
-                // Send AJAX request
+                // Upload file immediately
                 $.ajax({
-                    url: '{{ url("api/permit/request_update") }}',
+                    url: '{{ url("api/permit/reqdoc_update") }}',
                     type: 'POST',
-                    data: {
-                        req_id: '{{ $request->req_id }}',
-                        ...editedData
-                    },
-                    dataType: 'json',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
                         if (response.status == 0) {
-                            Modal.showSuccess('Perubahan Informasi berhasil.', function() {
-                                // Update original values
-                                Object.keys(editedData).forEach(field => {
-                                    originalData[field] = editedData[field];
-                                    $(`[data-field="${field}"]`).data('original', editedData[field]);
-                                });
-                                
-                                // Clear edited data
-                                Object.keys(editedData).forEach(key => delete editedData[key]);
-                                
-                                disableEditMode();
-                                
-                                // Optionally reload page to reflect changes
-                                // window.location.reload();
-                            });
+                            // // Show success
+                            // $container.find('.file-name-container').show()
+                            //     .find('.filename').text(file.name);
+                            
+                            // // Update filename in file list
+                            // $(`[data-req_doc_id="${reqDocId}"]`).closest('tr').find('.filename').text(file.name);
+                            // $(`[data-req_doc_id="${reqDocId}"]`).closest('tr').find('.preview-pdf').data('filename', file.name);
+                            
+                            // // Modal.showSuccess('File revisi berhasil diunggah');
+
+                            // Show success
+                            $container.find('.file-name-container').show()
+                                .find('.filename').text(file.name);
+                            
+                            // Update filename in file list AND update the preview button data
+                            const $row = $(`[data-req_doc_id="${reqDocId}"]`).closest('tr');
+                            $row.find('.filename').text(file.name);
+                            
+                            // Update the preview button data attributes
+                            const $previewBtn = $row.find('.preview-pdf');
+                            $previewBtn.data('filename', file.name);
+                            
+                            // For images, we also need to update the URL to prevent caching
+                            const newUrl = '{{ url("permit/document/preview") }}/' + reqDocId + '?t=' + new Date().getTime();
+                            $previewBtn.data('url', newUrl);
                         } else {
-                            console.log(response.message);
-                            Modal.showError('Terjadi kesalahan saat menyimpan perubahan.');
+                            Modal.showError(response.message || 'Gagal mengunggah file');
+                            $(this).val('');
                         }
                     },
                     error: function(xhr, status, error) {
+                        Modal.showError('Error mengunggah file');
                         Utils.ajaxErrorHandler(xhr, status, error);
                     },
-                    complete: () => {
-                        Loading.hide();
+                    complete: function() {
+                        $label.prop('disabled', false).html(originalLabel);
+                        $(this).val('');
                     }
                 });
             }
+        });
+
+        // Process button click (submit all revisions)
+        $(document).on('click', '#process-btn', function(e) {
+            Loading.show('Menyelesaikan revisi...');
             
-            // Process button click (submit all revisions)
-            $(document).on('click', '#process-btn', function(e) {
-                Loading.show('Menyelesaikan revisi...');
-                
-                // Submit via AJAX
-                $.ajax({
-                    url: '{{ url("api/permit/request_update") }}',
-                    type: 'POST',
-                    data: {
-                        req_id: '{{ $request->req_id }}',
-                        status: '{{ TrxRequest::STATUS_SUBMITTED }}'
-                    },
-                    dataType: 'json',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        Loading.hide();
-                        
-                        let redirectUrl='';
-                        @if (is_verificator() || is_approver())
-                            redirectUrl = '{{ url("permit/verify_list") }}';
-                        @else
-                            redirectUrl = '{{ url("permit/request_list") }}';
-                        @endif
-                        
-                        if (response.status == 0) {
-                            Modal.showSuccess('Revisi berhasil diselesaikan', function() {
-                                window.location.replace(redirectUrl);
-                            });
-                        } else {
-                            Modal.showError(response.message || 'Terjadi kesalahan');
-                        }
-                    },
-                    beforeSend: ()=>{
-
-                    },
-                    complete: ()=>{
-
-                    },
-                    error: function(xhr, status, error) {
-                        Loading.hide();
-                        Utils.ajaxErrorHandler(xhr, status, error);
+            // Submit via AJAX
+            $.ajax({
+                url: '{{ url("api/permit/request_update") }}',
+                type: 'POST',
+                data: {
+                    req_id: '{{ $request->req_id }}',
+                    mode: '{{ PermitApi::REQUEST_UPDATE_MODE_SUBMIT }}'
+                },
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    Loading.hide();
+                    
+                    let redirectUrl='';
+                    @if (is_verificator() || is_approver())
+                        redirectUrl = '{{ url("permit/verify_list") }}';
+                    @else
+                        redirectUrl = '{{ url("permit/request_list") }}';
+                    @endif
+                    
+                    if (response.status == 0) {
+                        Modal.showSuccess('Revisi berhasil diselesaikan', function() {
+                            window.location.replace(redirectUrl);
+                        });
+                    } else {
+                        Modal.showError(response.message || 'Terjadi kesalahan');
                     }
-                });
+                },
+                beforeSend: ()=>{
+
+                },
+                complete: ()=>{
+
+                },
+                error: function(xhr, status, error) {
+                    Loading.hide();
+                    Utils.ajaxErrorHandler(xhr, status, error);
+                }
             });
         });
     </script>

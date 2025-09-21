@@ -2,16 +2,17 @@
     use App\Models\TrxRequest;
     use App\Models\TrxRequestDocument;
     use App\Models\TrxRequestApproval;
+    use App\Http\Api\PermitApi;
 @endphp
 
 @extends('app')
 
 @php
     $page_title = $request->name;
-    if($is_approver){
-        $page_title = 'Approve Pengajuan: '.$page_title;
-    }else{
+    if($mode == PermitApi::REQUEST_UPDATE_MODE_VERIFY){
         $page_title = 'Verifikasi Pengajuan: '.$page_title;
+    }else{
+        $page_title = 'Approve Pengajuan: '.$page_title;
     }
 @endphp
 
@@ -151,6 +152,7 @@
                                                 class="form-select form-select-sm doc-status" 
                                                 data-req_doc_id="{{ $doc->req_doc_id }}"
                                                 data-doctypereq_id="{{ $doc->doctypereq_id }}"
+                                                data-doctypereq_name="{{ $doc->doctype->name }}"
                                             >
                                                 <option value="pending" {{ $status=='pending'? 'selected': '' }}>Pending</option>
                                                 <option value="verified" {{ $status=='verified'? 'selected': '' }}>Verified</option>
@@ -217,9 +219,17 @@
                     <!-- Button Process -->
                     <div class="row mt-4">
                         <div id="process-btn-wrapper" class="col-md-12 d-flex justify-content-end gap-2 mt-3">
+                            <a 
+                                id="back-btn" 
+                                class="btn btn-primary" 
+                                href="{{ url('permit/verify_list') }}"
+                                style="display: none;"
+                            >
+                                <i class="bi bi-arrow-90deg-left"></i> Kembali
+                            </a>
                             <button id="process-btn" class="btn btn-success">
                                 @php
-                                    $processBtnLabel = $is_approver? 'Setujui': 'Selesai Verifikasi';
+                                    $processBtnLabel = $mode==PermitApi::REQUEST_UPDATE_MODE_VERIFY? 'Selesai Verifikasi': 'Setujui';
                                 @endphp
                                 <i class="bi bi-check-circle"></i> {{ $processBtnLabel }}
                             </button>
@@ -294,104 +304,6 @@
         $(document).ready(function() {
             renderRevisionNotes();
             renderProcessButton();
-
-            // Update the doc-status change event handler
-            $('.doc-status').on('change', function(e){
-                const $dropdown = $(this);
-                const req_doc_id = $dropdown.data('req_doc_id');
-                const status = $dropdown.val();
-                const $statusBadge = $dropdown.closest('tr').find('.verify-status');
-                const $badgeContainer = $statusBadge.closest('.badge');
-
-                // If changing to revision, just open the modal without changing status yet
-                if(status == 'revision'){
-                    const doctypereq_id = $dropdown.data('doctypereq_id');
-                    editRevisionNotes(req_doc_id, doctypereq_id);
-                    
-                    // Store the intended value but don't update UI yet
-                    $dropdown.data('pending-value', status);
-                    
-                    // Revert the dropdown to its previous value
-                    const previousValue = $dropdown.data('previous-value') || 'pending';
-                    $dropdown.val(previousValue);
-                    
-                    return; // Exit early
-                }
-                
-                // For other status changes (verified/pending), use the reusable function
-                // Show loading state
-                $dropdown.prop('disabled', true);
-                $statusBadge.html('<i class="bi bi-arrow-repeat spin"></i>');
-                $badgeContainer.removeClass('bg-success bg-warning bg-secondary').addClass('bg-info');
-
-                // Update status via API
-                $.ajax({
-                    url: '{{ url("api/permit/reqdoc_update") }}',
-                    type: 'POST',
-                    data: {
-                        req_doc_id: req_doc_id,
-                        verify_status: status
-                    },
-                    dataType: 'json',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        if (response.status == 0) {
-                            // Update status display
-                            let badgeClass = 'bg-secondary';
-                            let statusText = 'pending';
-                            
-                            if(status == 'verified'){
-                                badgeClass = 'bg-success';
-                                statusText = 'verified';
-                            }
-
-                            // switch(status) {
-                            //     case 'verified':
-                            //         badgeClass = 'bg-success';
-                            //         statusText = 'verified';
-                            //         break;
-                            //     case 'revision':
-                            //         badgeClass = 'bg-warning';
-                            //         statusText = 'revision';
-                            //         break;
-                            // }
-                            
-                            $statusBadge.text(statusText);
-                            $badgeContainer.removeClass('bg-info bg-success bg-warning bg-secondary').addClass(badgeClass);
-                            
-                            if(status == 'verified' || status == 'revision'){
-                                renderRevisionNotes();
-                            }
-                            renderProcessButton();
-                        } else {
-                            // Error callback
-                            // Revert dropdown on error
-                            $dropdown.val($dropdown.data('previous-value') || 'pending');
-                            
-                            // Show error message
-                            Modal.show(
-                                `<div class="text-center">
-                                    <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
-                                    <h4 class="mt-3">Terjadi Kesalahan</h4>
-                                    <p>${response.message}</p>
-                                </div>`,
-                                'Error'
-                            );
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        $dropdown.val($dropdown.data('previous-value') || 'pending');
-                        Utils.ajaxErrorHandler(xhr, status, error);
-                    },
-                    complete: function() {
-                        $dropdown.prop('disabled', false);
-                        // Store current value for potential revert
-                        $dropdown.data('previous-value', status);
-                    }
-                });
-            });
         });
 
         function renderRevisionNotes(){
@@ -475,21 +387,146 @@
             });
         }
 
-        function editRevisionNotes(req_doc_id, doctype, rev_note_id = null){
-            modalRevNotes.find('[name="req_doc_id"]').val(req_doc_id);
-            modalRevNotes.find('.doctype').html(doctype);
+        function renderProcessButton(){
+            let allVerified = true;
+            let hasRevision = false;
 
-            if(rev_note_id){
-                let existingNotes = $(`#revision_notes-data-${ rev_note_id }`).html();
-                modalRevNotes.find('[name="revision_notes"]').val(existingNotes);
-                modalRevNotes.find('[name="rev_note_id"]').val(rev_note_id);
-            }else{
-                modalRevNotes.find('[name="rev_note_id"]').val('');
-                modalRevNotes.find('[name="revision_notes"]').val('');
+            // Check each document status
+            $('.verify-status').each(function() {
+                const status = $(this).text().trim();
+                if (status !== 'verified') {
+                    allVerified = false;
+                    if (status === 'revision') {
+                        hasRevision = true;
+                    }
+                }
+            });
+            
+            // Update status badge in header
+            let overallStatus = 'pending';
+            let overallBadgeClass = 'bg-light text-dark';
+            
+            if (allVerified) {
+                overallStatus = 'verified';
+                overallBadgeClass = 'bg-success text-white';
+            } else if (hasRevision) {
+                overallStatus = 'revision needed';
+                overallBadgeClass = 'bg-warning text-white';
             }
-
-            Utils.showBsModal('#modal_revision_notes');
+            
+            $('#statusBadge')
+                .text(overallStatus)
+                .removeClass('bg-light bg-success bg-warning bg-secondary bg-info text-dark text-white')
+                .addClass(overallBadgeClass);
+            
+            // Enable/disable the verify button based on the status
+            if (allVerified) {
+                $('#process-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
+                $('#back-btn').hide();
+            } else {
+                $('#process-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
+                $('#back-btn').show();
+            }
         }
+
+        // Update the doc-status change event handler
+        $(document).on('change', '.doc-status', function(e){
+            const $dropdown = $(this);
+            const req_doc_id = $dropdown.data('req_doc_id');
+            const status = $dropdown.val();
+            const $statusBadge = $dropdown.closest('tr').find('.verify-status');
+            const $badgeContainer = $statusBadge.closest('.badge');
+
+            // If changing to revision, just open the modal without changing status yet
+            if(status == 'revision'){
+                const doctypereq_id = $dropdown.data('doctypereq_id');
+                const doctypereq_name = $dropdown.data('doctypereq_name');
+                editRevisionNotes(req_doc_id, doctypereq_name);
+                
+                // Store the intended value but don't update UI yet
+                $dropdown.data('pending-value', status);
+                
+                // Revert the dropdown to its previous value
+                const previousValue = $dropdown.data('previous-value') || 'pending';
+                $dropdown.val(previousValue);
+                
+                return; // Exit early
+            }
+            
+            // For other status changes (verified/pending), use the reusable function
+            // Show loading state
+            $dropdown.prop('disabled', true);
+            $statusBadge.html('<i class="bi bi-arrow-repeat spin"></i>');
+            $badgeContainer.removeClass('bg-success bg-warning bg-secondary').addClass('bg-info');
+
+            // Update status via API
+            $.ajax({
+                url: '{{ url("api/permit/reqdoc_update") }}',
+                type: 'POST',
+                data: {
+                    req_doc_id: req_doc_id,
+                    verify_status: status
+                },
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.status == 0) {
+                        // Update status display
+                        let badgeClass = 'bg-secondary';
+                        let statusText = 'pending';
+                        
+                        if(status == 'verified'){
+                            badgeClass = 'bg-success';
+                            statusText = 'verified';
+                        }
+
+                        // switch(status) {
+                        //     case 'verified':
+                        //         badgeClass = 'bg-success';
+                        //         statusText = 'verified';
+                        //         break;
+                        //     case 'revision':
+                        //         badgeClass = 'bg-warning';
+                        //         statusText = 'revision';
+                        //         break;
+                        // }
+                        
+                        $statusBadge.text(statusText);
+                        $badgeContainer.removeClass('bg-info bg-success bg-warning bg-secondary').addClass(badgeClass);
+                        
+                        if(status == 'verified' || status == 'revision'){
+                            renderRevisionNotes();
+                        }
+                        renderProcessButton();
+                    } else {
+                        // Error callback
+                        // Revert dropdown on error
+                        $dropdown.val($dropdown.data('previous-value') || 'pending');
+                        
+                        // Show error message
+                        Modal.show(
+                            `<div class="text-center">
+                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Terjadi Kesalahan</h4>
+                                <p>${response.message}</p>
+                            </div>`,
+                            'Error'
+                        );
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $dropdown.val($dropdown.data('previous-value') || 'pending');
+                    Utils.ajaxErrorHandler(xhr, status, error);
+                },
+                complete: function() {
+                    $dropdown.prop('disabled', false);
+                    // Store current value for potential revert
+                    $dropdown.data('previous-value', status);
+                }
+            });
+        });
 
         $('#modal_revision_notes').find('form').on('submit', function(e) {
             e.preventDefault();
@@ -559,7 +596,7 @@
                                     renderProcessButton();
 
                                     // if adding revision on approval page even once, removes the process button
-                                    @if($mode==1)
+                                    @if($mode == PermitApi::REQUEST_UPDATE_MODE_APPROVE)
                                         $('#process-btn').hide();
                                     @endif
                                     
@@ -571,7 +608,7 @@
                                         modalRevNotes.find('form')[0].reset();
                                         modalRevNotes.find('[name="rev_note_id"]').val('');
                                         $('#responseMessage').addClass('d-none');
-                                    }, 500);
+                                    }, 250);
                                 } else {
                                     // Show error message for status update
                                     responseMessage
@@ -613,6 +650,22 @@
                 }
             });
         });
+
+        function editRevisionNotes(req_doc_id, doctype, rev_note_id = null){
+            modalRevNotes.find('[name="req_doc_id"]').val(req_doc_id);
+            modalRevNotes.find('.doctype').html(doctype);
+
+            if(rev_note_id){
+                let existingNotes = $(`#revision_notes-data-${ rev_note_id }`).html();
+                modalRevNotes.find('[name="revision_notes"]').val(existingNotes);
+                modalRevNotes.find('[name="rev_note_id"]').val(rev_note_id);
+            }else{
+                modalRevNotes.find('[name="rev_note_id"]').val('');
+                modalRevNotes.find('[name="revision_notes"]').val('');
+            }
+
+            Utils.showBsModal('#modal_revision_notes');
+        }
 
         $(document).on('click', '#req-notes-btn', function(e) {
             // Hide any previous response messages
@@ -666,46 +719,6 @@
             });
         });
 
-        function renderProcessButton(){
-            let allVerified = true;
-            let hasRevision = false;
-
-            // Check each document status
-            $('.verify-status').each(function() {
-                const status = $(this).text().trim();
-                if (status !== 'verified') {
-                    allVerified = false;
-                    if (status === 'revision') {
-                        hasRevision = true;
-                    }
-                }
-            });
-            
-            // Update status badge in header
-            let overallStatus = 'pending';
-            let overallBadgeClass = 'bg-light';
-            
-            if (allVerified) {
-                overallStatus = 'verified';
-                overallBadgeClass = 'bg-success';
-            } else if (hasRevision) {
-                overallStatus = 'revision needed';
-                overallBadgeClass = 'bg-warning';
-            }
-            
-            $('#statusBadge')
-                .text(overallStatus)
-                .removeClass('bg-light bg-success bg-warning bg-secondary bg-info')
-                .addClass(overallBadgeClass);
-            
-            // Enable/disable the verify button based on the status
-            if (allVerified) {
-                $('#process-btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
-            } else {
-                $('#process-btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
-            }
-        }
-
         $(document).on('click', '#process-btn', function(e) {
             // Hide any previous response messages
             $('#responseMessage').addClass('d-none');
@@ -721,15 +734,15 @@
                 type: 'POST',
                 data: {
                     req_id: '{{ $request->req_id }}',
-                    status: '{{ $mode==1? TrxRequestApproval::STATUS_APPROVED : TrxRequest::STATUS_VERIFIED }}'
+                    mode: '{{ $mode }}'
                 },
                 dataType: 'json',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    const successMessage = '{{ $mode==1? "Approval Berhasil" : "Verifikasi Selesai" }}';
-                    const redirectUrl = '{{ url( "permit/".($mode==1? "approval_list": "verify_list") ) }}';
+                    const successMessage = '{{ $mode == PermitApi::REQUEST_UPDATE_MODE_VERIFY ? "Verifikasi Selesai": "Approval Berhasil" }}';
+                    const redirectUrl = '{{ url( "permit/".($mode == PermitApi::REQUEST_UPDATE_MODE_VERIFY? "verify_list": "approval_list") ) }}';
 
                     if (response.status == 0) {
                         Modal.showSuccess(successMessage, ()=>{

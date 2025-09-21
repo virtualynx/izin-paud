@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Validator;
 
 class PermitApi extends Controller
 {
+    public const REQUEST_UPDATE_MODE_SUBMIT = 'submit';
+    public const REQUEST_UPDATE_MODE_APPROVE = 'approve';
+    public const REQUEST_UPDATE_MODE_VERIFY = 'verify';
+
     public function __construct(){
     }
 
@@ -394,6 +398,33 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
+    public function revision_documents_list($req_id){
+        $request = TrxRequest::query()
+            ->with(['documents.doctype', 'documents.revision_note'])
+            ->where('req_id', $req_id)
+            ->first();
+
+        $documents = $request->documents->filter(function($doc) {
+            return !empty($doc->revision_note) && $doc->revision_note->is_resolved == 0;
+        });
+
+        // Transform data untuk response
+        $results = $documents->map(function($doc) {
+            $path_arr = explode("/", $doc->file_path);
+            $filename = end($path_arr);
+            
+            return [
+                'req_doc_id' => $doc->req_doc_id,
+                'doctype' => $doc->doctype,
+                'filename' => $filename,
+                'mime' => Storage::mimeType($doc->file_path),
+                'revision_note' => $doc->revision_note
+            ];
+        });
+
+        return response()->json(new ApiResponse($results->values()));
+    }
+
     public function reqdoc_update(){
         $params = request()->all();
 
@@ -414,37 +445,28 @@ class PermitApi extends Controller
                         ->where('req_doc_id', $params['req_doc_id'])
                         ->get();
 
-                    if(count($notes) > 0){
-                        foreach($notes as $row){
-                            $row->is_resolved = 1;
-                            $row->save();
-                        }
+                    foreach($notes as $row){
+                        $row->is_resolved = 1;
+                        $row->save();
                     }
                 }
 
                 if($doc->verify_status != $verify_status){
                     $doc->verify_status = $verify_status;
                 }
-                
-                //condition of file-revision
-                if(
-                    !empty($params['file']) 
-                    && !empty($doc->revision_note)
-                    && $verify_status == 'pending'
-                ){
-                    // Delete the old file if it exists
-                    if (!empty($doc->file_path) && Storage::exists($doc->file_path)) {
-                        Storage::delete($doc->file_path);
-                    }
+            }
 
-                    $file = $params['file'];
-                    $savedFolder = "request_documents/$doc->req_id";
-                    $savedPath = $file->storeAs($savedFolder, $file->getClientOriginalName());
-                    $doc->file_path = $savedPath;
+            //condition of file-revision
+            if(!empty($params['file'])){
+                // Delete the old file if it exists
+                // if (!empty($doc->file_path) && Storage::exists($doc->file_path)) {
+                //     Storage::delete($doc->file_path);
+                // }
 
-                    $doc->revision_note->is_resolved = 1;
-                    $doc->revision_note->save();
-                }
+                $file = $params['file'];
+                $savedFolder = "request_documents/$doc->req_id";
+                $savedPath = $file->storeAs($savedFolder, $file->getClientOriginalName());
+                $doc->file_path = $savedPath;
             }
 
             $doc->save();
@@ -462,37 +484,52 @@ class PermitApi extends Controller
         $params = request()->all();
 
         $response = new ApiResponse();
+        DB::beginTransaction();
         try {
             $req = TrxRequest::where('req_id', $params['req_id'])->first();
 
             $params_temp = $params;
             unset($params_temp['req_id']);
+            unset($params_temp['mode']);
 
-            if(!empty($params_temp['status'])){
-                // do privilege checking on approver's status update
-                if(in_array($params_temp['status'], [
-                    TrxRequestApproval::STATUS_APPROVED,
-                    TrxRequestApproval::STATUS_REVISION,
-                    TrxRequestApproval::STATUS_REJECTED
-                ])){
-                    $userinfo = userinfo();
-                    $permitService->updateRequestApproval($params['req_id'], $userinfo->user_id, $params['status']);
+            if(!empty($params['mode'])){
+                if($params['mode'] == self::REQUEST_UPDATE_MODE_SUBMIT){
+                    $req->status = TrxRequest::STATUS_SUBMITTED;
+
+                    $docs = TrxRequestDocument::query()
+                        ->with('revision_note')
+                        ->where('is_disabled', 0)
+                        ->where('verify_status', TrxRequestDocument::STATUS_REVISION)
+                        ->where('req_id', $params['req_id'])
+                        ->get();
+                    
+                    foreach($docs as $row){
+                        $row->verify_status = TrxRequestDocument::STATUS_PENDING;
+                        $row->save();
+                        
+                        if(!empty($row->revision_note)){
+                            $row->revision_note->is_resolved = 1;
+                            $row->revision_note->save();
+                        }
+                    }
                 }
-
-                // remove status outside of enums in TrxRequest
-                if(!in_array($params_temp['status'], [
-                    TrxRequest::STATUS_DRAFT,
-                    TrxRequest::STATUS_SUBMITTED,
-                    TrxRequest::STATUS_VERIFIED
-                ])){
-                    unset($params_temp['status']);
+                
+                if($params['mode'] == self::REQUEST_UPDATE_MODE_VERIFY){
+                    $req->status = TrxRequest::STATUS_VERIFIED;
+                }
+                
+                if($params['mode'] == self::REQUEST_UPDATE_MODE_APPROVE){
+                    $userinfo = userinfo();
+                    $permitService->updateRequestApproval($params['req_id'], $userinfo->user_id, TrxRequestApproval::STATUS_APPROVED);
                 }
             }
 
             $req->fill($params_temp);
 
             $req->save();
+            DB::commit();
         } catch (\Exception $e) {
+            DB::rollBack();
             $response->status = 500;
             $response->message = $e->getMessage();
         }

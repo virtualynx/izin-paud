@@ -25,6 +25,8 @@ Route::prefix('permit')->group(function () {
         Route::post('/update', [PermitApi::class, 'revision_notes_update']);
     });
 
+    Route::get('/revision_documents/list/{req_id}', [PermitApi::class, 'revision_documents_list']);
+
     Route::post('/reqdoc_update', [PermitApi::class, 'reqdoc_update']);
     Route::post('/reqdoc_info', [PermitApi::class, 'reqdoc_info']);
     Route::post('/request_update', [PermitApi::class, 'request_update']);

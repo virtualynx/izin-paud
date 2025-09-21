@@ -1,5 +1,6 @@
 @php
     use App\Models\TrxRequest;
+    use App\Http\Api\PermitApi;
 @endphp
 
 @extends('app')
@@ -123,8 +124,7 @@
             @if(is_approver())
                 $('#table_permit_wrapper').on('click', '.approve-btn', function(event) {
                     event.preventDefault();
-                    // window.open("{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode=1", '_blank');
-                    window.location.href = "{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode=1";
+                    window.location.href = "{{ url('permit/verify') }}/"+$(this).data('req_id')+"?mode={{ PermitApi::REQUEST_UPDATE_MODE_APPROVE }}";
                 });
             @endif
 

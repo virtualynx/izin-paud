@@ -106,8 +106,7 @@
                                             <i class="bi bi-pencil"></i> Revisi
                                         </button>
                                     `;
-                                }
-                                if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
+                                }else if(row.status == '{{ TrxRequest::STATUS_SUBMITTED }}'){
                                     content += `
                                         <button 
                                             class="btn btn-sm btn-warning verify-btn" 
@@ -141,7 +140,6 @@
 
                 $('#table_permit_wrapper').on('click', '.verify-btn', function(event) {
                     event.preventDefault();
-                    // window.open("{{ url('permit/verify') }}/"+$(this).data('req_id'), '_blank');
                     window.location.href = "{{ url('permit/verify') }}/" + $(this).data('req_id');
                 });
             @endif
