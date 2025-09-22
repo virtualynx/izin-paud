@@ -251,7 +251,7 @@
                                                     type="file" 
                                                     class="form-control form-control-sm file-input" 
                                                     name="${a.doctypereq_id}" 
-                                                    accept=".pdf,.jpg,.jpeg,.png" 
+                                                    accept=".pdf" 
                                                     ${a.is_optional == 0 ? 'required' : ''}
                                                 >
                                                 <small class="text-muted">Maks. ${uploadMaxSizeMb}MB</small>

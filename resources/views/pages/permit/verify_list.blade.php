@@ -70,7 +70,7 @@
                     },
                     error: function(xhr, error, thrown) {
                         console.log(error);
-                        Loading.tableError($('#table_permit tbody'), 4, 'Gagal memuat data');
+                        Loading.tableLoadingError($('#table_permit tbody'), 4, 'Gagal memuat data');
                         Modal.showError('Gagal memuat data. Silakan coba lagi.');
                     }
                 },
@@ -130,6 +130,11 @@
                 //     [1, 'desc'],
                 //     [2, 'desc']
                 // ]
+            });
+
+            $('#table_permit_wrapper').on('click', '.view-btn', function(event) {
+                event.preventDefault();
+                window.location.href = "{{ url('permit/view') }}/" + $(this).data('req_id');
             });
             
             @if(is_verificator() || is_approver())

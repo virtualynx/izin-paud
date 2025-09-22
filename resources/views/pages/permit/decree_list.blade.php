@@ -139,7 +139,7 @@
                     },
                     error: function(xhr, error, thrown) {
                         console.log(error);
-                        Loading.tableError($('#table_permit tbody'), 4, 'Gagal memuat data');
+                        Loading.tableLoadingError($('#table_permit tbody'), 4, 'Gagal memuat data');
                         Modal.showError('Gagal memuat data. Silakan coba lagi.');
                     }
                 },

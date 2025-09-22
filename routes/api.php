@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Api\PermitApi;
+use App\Http\Api\RateApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,4 +32,9 @@ Route::prefix('permit')->group(function () {
     Route::post('/reqdoc_info', [PermitApi::class, 'reqdoc_info']);
     Route::post('/request_update', [PermitApi::class, 'request_update']);
     Route::post('/decree_upload', [PermitApi::class, 'decree_upload']);
+});
+
+Route::prefix('rate')->group(function () {
+    Route::get('/get/{req_id}', [RateApi::class, 'get']);
+    Route::post('/send', [RateApi::class, 'send']);
 });

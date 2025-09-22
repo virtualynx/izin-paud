@@ -19,6 +19,10 @@
             }
         },
         showBsModal: function(cssSelector){
+            if ($(cssSelector).length == 0) {
+                throw `Selector ${cssSelector} does not exist`;
+            }
+
             const jqModal = $(cssSelector);
 
             // Clean up any existing modal instance
@@ -86,6 +90,18 @@
             // Re-enable body scrolling
             $('body').css('overflow', 'auto');
         },
+        componentLoading: function(jquery_element, loading_text = 'Loading ...'){
+            jquery_element.html(`
+                <div class="row">
+                    <div class="col-12 text-center py-2">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">${loading_text}</span>
+                    </div>
+                </div>
+            `);
+        },
         tableLoading: function(jquery_tbody, colspan, loading_text){
             jquery_tbody.html(`
                 <tr>
@@ -98,7 +114,7 @@
                 </tr>
             `);
         },
-        tableEmpty: function(jquery_tbody, colspan){
+        tableLoadingEmpty: function(jquery_tbody, colspan){
             jquery_tbody.html(`
                 <tr>
                     <td colspan="${colspan}" class="text-center py-4">
@@ -107,7 +123,7 @@
                 </tr>
             `);
         },
-        tableError: function(jquery_tbody, colspan, error_text){
+        tableLoadingError: function(jquery_tbody, colspan, error_text){
             jquery_tbody.html(`
                 <tr>
                     <td colspan="${colspan}" class="text-center py-4">
@@ -115,6 +131,6 @@
                     </td>
                 </tr>
             `);
-        }
+        },
     };
 </script>

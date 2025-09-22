@@ -65,4 +65,11 @@ class TrxRequest extends Model
             ->whereNull('req_doc_id')
             ->latest('created_at');
     }
+
+    public function rating()
+    {
+        return $this->hasOne(TrxServiceRate::class, 'req_id', 'req_id')
+            ->where('is_disabled', 0)
+            ->latest('created_at');
+    }
 }
