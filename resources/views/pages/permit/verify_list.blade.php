@@ -131,6 +131,11 @@
                 //     [2, 'desc']
                 // ]
             });
+
+            $('#table_permit_wrapper').on('click', '.view-btn', function(event) {
+                event.preventDefault();
+                window.location.href = "{{ url('permit/view') }}/" + $(this).data('req_id');
+            });
             
             @if(is_verificator() || is_approver())
                 $('#table_permit_wrapper').on('click', '.revisi-btn', function(event) {

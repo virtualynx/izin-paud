@@ -43,6 +43,42 @@ class PermitController extends Controller
         return view('pages.permit.decree_list');
     }
 
+    public function page_view($req_id, UserService $userService, PermitService $permitService){
+        $params = request()->all();
+
+        $request = TrxRequest::query()
+            ->with('documents.doctype')
+            ->with('revision_note')
+            ->where('is_disabled', 0)
+            ->where('req_id', $req_id)
+            ->first();
+
+        if(!is_verificator() && !is_approver()){
+            $user = userinfo();
+            if($user->user_id != $request->created_by){
+                abort(403);
+            }
+        }
+
+        $documents = json_decode(json_encode($request->documents), true);
+
+        foreach($documents as &$doc){
+            $path_arr = explode("/", $doc['file_path']);
+            $filename = $path_arr[count($path_arr)-1];
+            $doc['filename'] = $filename;
+
+            $doc['mime'] = Storage::disk()->mimeType($doc['file_path']);
+        }
+        unset($doc);
+
+        $documents = json_decode(json_encode($documents));
+
+        return view('pages.permit.view', [
+            'request' => $request,
+            'documents' => $documents
+        ]);
+    }
+
     public function page_verify($req_id, UserService $userService, PermitService $permitService){
         $params = request()->all();
 

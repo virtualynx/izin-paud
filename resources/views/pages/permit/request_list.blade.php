@@ -196,7 +196,7 @@
                                     class="btn btn-sm btn-info view-btn me-1" 
                                     data-req_id="${row.req_id}"
                                 >
-                                    <i class="bi bi-eye"></i> Info
+                                    <i class="bi bi-eye"></i> Lihat
                                 </button>
                             `;
 
@@ -264,6 +264,11 @@
                 //     [1, 'desc'],
                 //     [2, 'desc']
                 // ]
+            });
+
+            $('#table_permit_wrapper').on('click', '.view-btn', function(event) {
+                event.preventDefault();
+                window.location.href = "{{ url('permit/view') }}/" + $(this).data('req_id');
             });
 
             $('#table_permit_wrapper').on('click', '.edit-btn', function(event) {
