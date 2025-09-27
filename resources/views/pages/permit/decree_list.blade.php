@@ -167,6 +167,7 @@
                                         <i class="bi bi-eye"></i> Lihat File
                                     </button>
                                     <small class="form-text text-muted">${row.decree.filename}</small>
+                                    <small class="form-text text-muted">(Terbit pada ${row.decree.created_at})</small>
                                 </div>
                             `: `
                                 <span class="ms-2 mb-2 text-danger">Belum ada SK</span>

@@ -258,6 +258,8 @@ class PermitApi extends Controller
                 $decree_fileinfo['filename'] = $filename;
 
                 $decree_fileinfo['mime'] = Storage::disk()->mimeType($row->decree->file_path);
+                $decree_fileinfo['created_at'] = $row->decree->created_at->format('d-m-Y H:i');
+                $decree_fileinfo['issued_date'] = $row->decree->issued_date;
             }
 
             $data[] = [
