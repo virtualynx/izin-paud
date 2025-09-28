@@ -355,14 +355,14 @@
                         });
 
                         if(temp_arr.length == 0){
-                            tbody.append(`
-                                <tr>
-                                    <td colspan="4" class="text-center py-4">
-                                        <span class="">Tidak ada data ...</span>
-                                    </td>
-                                </tr>
-                            `);
-                            Loading.tableLoadingEmpty(tbody, 4, 'Tidak ada data');
+                            // tbody.append(`
+                            //     <tr>
+                            //         <td colspan="4" class="text-center py-4">
+                            //             <span class="">Tidak ada revisi ...</span>
+                            //         </td>
+                            //     </tr>
+                            // `);
+                            Loading.tableLoadingEmpty(tbody, 4, 'Tidak ada revisi');
                         }
                     } else {
                         tbody.empty();

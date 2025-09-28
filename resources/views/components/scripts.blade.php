@@ -114,11 +114,11 @@
                 </tr>
             `);
         },
-        tableLoadingEmpty: function(jquery_tbody, colspan){
+        tableLoadingEmpty: function(jquery_tbody, colspan, empty_text = 'Tidak ada data ...'){
             jquery_tbody.html(`
                 <tr>
                     <td colspan="${colspan}" class="text-center py-4">
-                        <span class="">Tidak ada data ...</span>
+                        <span class="">${empty_text}</span>
                     </td>
                 </tr>
             `);
