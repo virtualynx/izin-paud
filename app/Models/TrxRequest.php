@@ -40,7 +40,10 @@ class TrxRequest extends Model
     
     public function ext_of_decree()
     {
-        return $this->belongsTo(TrxPermitDecree::class, 'req_id', 'req_id');
+        // return $this->belongsTo(TrxPermitDecree::class, 'ext_of_decree_num', 'decree_num');
+        return $this->hasOne(TrxPermitDecree::class, 'ext_of_decree_num', 'decree_num')
+            ->where('is_disabled', 0)
+            ->latest('created_at');
     }
 
     public function revision_notes()
