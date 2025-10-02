@@ -3,6 +3,7 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermitController;
 use App\Http\Controllers\SsoController;
+use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index']);
@@ -34,3 +35,5 @@ Route::middleware(['sso_login'])->group(function () {
         });
     });
 });
+
+Route::get('/testmail', [TestController::class, 'testmail']);

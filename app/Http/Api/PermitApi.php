@@ -3,17 +3,20 @@
 namespace App\Http\Api;
 
 use App\Dto\ApiResponse;
+use App\Mail\StatusMail;
 use App\Models\Masters\DoctypeRequirement;
 use App\Models\TrxPermitDecree;
 use App\Models\TrxRequest;
 use App\Models\TrxRequestApproval;
 use App\Models\TrxRequestDocument;
 use App\Models\TrxRevisionNotes;
+use App\Models\UserProfile;
 use App\Services\PermitService;
 use App\Services\PositionService;
 use App\Services\UserService;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -441,7 +444,7 @@ class PermitApi extends Controller
         return response()->json(new ApiResponse($results->values()));
     }
 
-    public function reqdoc_update(){
+    public function reqdoc_update(UserService $userService){
         $params = request()->all();
 
         $response = new ApiResponse();
@@ -465,6 +468,18 @@ class PermitApi extends Controller
                         $row->is_resolved = 1;
                         $row->save();
                     }
+                }
+
+                if($verify_status == TrxRequestDocument::STATUS_REVISION){
+                    $req = $doc->request;
+                    $profile = $userService->getUserProfile($req->created_by);
+                    Mail::to("virtualynx@gmail.com")->send(new StatusMail(
+                        profileName: $profile->name,
+                        paudName: $req->name,
+                        status: TrxRequestDocument::STATUS_REVISION,
+                        actionUrl: url('permit/request_list'),
+                        actionText: 'Detail'
+                    ));
                 }
 
                 if($doc->verify_status != $verify_status){

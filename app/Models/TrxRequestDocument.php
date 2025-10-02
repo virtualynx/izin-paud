@@ -26,6 +26,11 @@ class TrxRequestDocument extends Model
     {
         return $this->belongsTo(DoctypeRequirement::class, 'doctypereq_id', 'doctypereq_id');
     }
+    
+    public function request()
+    {
+        return $this->belongsTo(TrxRequest::class, 'req_id', 'req_id');
+    }
 
     public function revision_note()
     {
