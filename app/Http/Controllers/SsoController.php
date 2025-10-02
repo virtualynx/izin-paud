@@ -45,7 +45,8 @@ class SsoController extends Controller
             if(empty($profile)){
                 $profile = new UserProfile([
                     'user_id' => $sso_user->user_id,
-                    'name' => $sso_user->email
+                    'name' => $sso_user->email,
+                    'email' => $sso_user->email
                 ]);
                 $profile->save();
             }
