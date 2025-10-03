@@ -175,7 +175,8 @@
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="agreeTerms" required>
                                 <label class="form-check-label" for="agreeTerms">
-                                    Saya menyatakan bahwa semua dokumen yang diupload adalah benar dan valid
+                                    Saya menyatakan bahwa semua dokumen yang diupload adalah benar dan valid. </p>
+                                    Dan saya menyetujui pemberian data saya untuk digunakan untuk memproses perizinan, dan meningkatkan layanan SIPENDI
                                 </label>
                             </div>
                             
