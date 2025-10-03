@@ -111,6 +111,7 @@ class PermitService
 
     public function getRequestApprovalMap(array $req_ids){
         $approval_rs = TrxRequestApproval::query()
+            ->with('position')
             ->where('is_disabled', 0)
             ->whereIn('req_id', $req_ids)
             ->orderBy('level', 'desc')
@@ -160,6 +161,8 @@ class PermitService
 
         $approval->approval_status = $status;
         $approval->save();
+
+        return $approval;
     }
 
     private function _listRequestSelectQuery(){

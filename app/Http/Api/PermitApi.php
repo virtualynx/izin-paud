@@ -472,9 +472,9 @@ class PermitApi extends Controller
 
                 if($verify_status == TrxRequestDocument::STATUS_REVISION){
                     $req = $doc->request;
-                    $profile = $userService->getUserProfile($req->created_by);
-                    Mail::to("virtualynx@gmail.com")->send(new StatusMail(
-                        profileName: $profile->name,
+                    $ownerProfile = $userService->getUserProfile($req->created_by);
+                    Mail::to($ownerProfile->email)->send(new StatusMail(
+                        profileName: $ownerProfile->name,
                         paudName: $req->name,
                         status: TrxRequestDocument::STATUS_REVISION,
                         actionUrl: url('permit/request_list'),
@@ -511,7 +511,7 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
-    public function request_update(PermitService $permitService){
+    public function request_update(PermitService $permitService, UserService $userService){
         $params = request()->all();
 
         $response = new ApiResponse();
@@ -547,11 +547,29 @@ class PermitApi extends Controller
                 
                 if($params['mode'] == self::REQUEST_UPDATE_MODE_VERIFY){
                     $req->status = TrxRequest::STATUS_VERIFIED;
+                    
+                    $ownerProfile = $userService->getUserProfile($req->created_by);
+                    Mail::to($ownerProfile->email)->send(new StatusMail(
+                        profileName: $ownerProfile->name,
+                        paudName: $req->name,
+                        status: TrxRequest::STATUS_VERIFIED,
+                        actionUrl: url('permit/request_list'),
+                        actionText: 'Detail'
+                    ));
                 }
                 
                 if($params['mode'] == self::REQUEST_UPDATE_MODE_APPROVE){
                     $userinfo = userinfo();
-                    $permitService->updateRequestApproval($params['req_id'], $userinfo->user_id, TrxRequestApproval::STATUS_APPROVED);
+                    $approval = $permitService->updateRequestApproval($params['req_id'], $userinfo->user_id, TrxRequestApproval::STATUS_APPROVED);
+
+                    $ownerProfile = $userService->getUserProfile($req->created_by);
+                    Mail::to($ownerProfile->email)->send(new StatusMail(
+                        profileName: $ownerProfile->name,
+                        paudName: $req->name,
+                        status: self::REQUEST_UPDATE_MODE_APPROVE,
+                        actionUrl: url('permit/request_list'),
+                        actionText: 'Detail'
+                    ));
                 }
             }
 
@@ -568,7 +586,7 @@ class PermitApi extends Controller
         return response()->json($response);
     }
 
-    public function decree_upload(PermitService $permitService){
+    public function decree_upload(UserService $userService){
         $params = request()->all();
 
         $response = new ApiResponse();
@@ -602,6 +620,16 @@ class PermitApi extends Controller
             $decree->file_path = $savedPath;
 
             $decree->save();
+            
+            $ownerProfile = $userService->getUserProfile($req->created_by);
+            Mail::to($ownerProfile->email)->send(new StatusMail(
+                profileName: $ownerProfile->name,
+                paudName: $req->name,
+                status: PermitService::STATUS_TEXT_PUBLISHED,
+                actionUrl: url('permit/request_list'),
+                actionText: 'Detail'
+            ));
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();

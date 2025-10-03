@@ -19,14 +19,17 @@
             // };
             
             $statusClass = match(strtolower($status)) {
-                'success', 'completed' => 'status-success',
-                'revisi', 'pending' => 'status-warning',
+                'success', 'verified', 'approve', 'Izin terbit' => 'status-success',
+                'revision', 'pending' => 'status-warning',
                 default => 'status-info'
             };
             
             $statusText = match(strtolower($status)) {
                 'success', 'completed' => 'status-success',
+                'verified' => 'Terverifikasi',
                 'revision' => 'Revisi Data',
+                'approve' => 'Disetujui',
+                'Izin terbit' => 'Izin terbit',
                 default => 'status-info'
             };
         @endphp

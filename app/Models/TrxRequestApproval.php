@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Masters\Position;
 use App\Traits\Auditable;
 use App\Traits\HasUuidPrimaryKey;
 use Illuminate\Database\Eloquent\Model;
@@ -23,5 +24,10 @@ class TrxRequestApproval extends Model
     public function employee()
     {
         return $this->belongsTo(UserProfile::class, 'user_id', 'user_id');
+    }
+    
+    public function position()
+    {
+        return $this->belongsTo(Position::class, 'approver_position_id', 'position_id');
     }
 }

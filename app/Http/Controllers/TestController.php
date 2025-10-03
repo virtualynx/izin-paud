@@ -24,12 +24,16 @@ class TestController extends Controller
     }
 
     public function testmail(){
+        // $status = 'success';
+        $status = 'verified';
+        // $status = 'revision';
+
         return view('emails.status', [
             'profileName' => 'User Test',
             'paudName' => 'Paud Kemuning',
-            'status' => 'success',
-            'actionUrl' => 'actionUrl',
-            'actionText' => 'actionText'
+            'status' => $status,
+            'actionUrl' => url('permit/request_list'),
+            'actionText' => 'Detail'
         ]);
     }
 }
