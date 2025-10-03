@@ -31,7 +31,7 @@
 
         <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Beranda</a></li>
 
-        <li class="nav-item dropdown">
+        {{-- <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Panduan
           </a>
@@ -40,7 +40,7 @@
             <li><a class="dropdown-item" href="#">Alur Proses</a></li>
             <li><a class="dropdown-item" href="#">FAQ</a></li>
           </ul>
-        </li>
+        </li> --}}
 
         @if(is_loggedin())
           <li class="nav-item"><a class="nav-link" href="{{ url('/permit/request_list') }}">Pengajuan</a></li>

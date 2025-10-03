@@ -25,9 +25,9 @@
                     <a href="{{ url('/sso/login') }}" class="btn btn-primary btn-lg me-3 mb-2 mb-md-0">
                         <i class="bi bi-box-arrow-in-right"></i> Login untuk Mengajukan
                     </a>
-                    <a href="#" class="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#panduanModal">
+                    {{-- <a href="#" class="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#panduanModal">
                         <i class="bi bi-info-circle"></i> Lihat Panduan
-                    </a>
+                    </a> --}}
                 @endif
             </div>
         </div>
